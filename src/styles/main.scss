@@ -1,0 +1,946 @@
+/* 明暗主题统一配色变量 */
+:root {
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 20px;
+  --nn-primary: #f1404b;
+  --nn-primary-rgb: 241, 64, 75;
+  --el-color-primary: #f1404b;
+  --el-color-primary-rgb: 241, 64, 75;
+  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #fff);
+  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 80%, #000);
+
+  /* 展开侧栏：紧凑宽度 */
+  --nn-sidebar-width: 120px;
+  /* 折叠宽度 = 菜单项高度，展开时图标列同宽，避免跳动 */
+  --nn-sidebar-collapsed: 52px;
+  --nn-menu-item-size: var(--nn-sidebar-collapsed);
+  /* 顶栏高度（玻璃导航） */
+  --nn-header-height: 64px;
+  /* 全局搜索行高度（与 GlobalSearch .cmd-search min-height 一致） */
+  --nn-search-height: 48px;
+  /* 侧栏卡片与顶栏 / 页面边缘的间距 */
+  --nn-sidebar-gap: 20px;
+  /* 侧栏与右侧内容之间的间距（小于外边距） */
+  --nn-sidebar-content-gap: 8px;
+  --nn-sidebar-rail: calc(
+    var(--nn-sidebar-width) + var(--nn-sidebar-gap) + var(--nn-sidebar-content-gap)
+  );
+  --nn-sidebar-rail-collapsed: calc(
+    var(--nn-sidebar-collapsed) + var(--nn-sidebar-gap) + var(--nn-sidebar-content-gap)
+  );
+  /* 面板统一圆角（与顶栏磨砂一致） */
+  --nn-sidebar-radius: 12px;
+  --nn-drawer-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --nn-drawer-duration: 0.45s;
+  --nn-radius: var(--el-border-radius-base);
+  /* 交互项：圆角 + 内边距高亮（与侧栏菜单一致） */
+  --nn-item-radius: 8px;
+  --nn-item-pad-y: 4px;
+  --nn-item-pad-x: 8px;
+  /* 选中 / 悬浮：灰底 + 主色字 */
+  --nn-item-active-bg: #f0f2f5;
+  --nn-item-hover-bg: #f0f2f5;
+
+  /* 全局平滑过渡 */
+  --nn-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --nn-duration: 0.28s;
+  --nn-duration-fast: 0.2s;
+  --nn-duration-slow: 0.36s;
+  --nn-transition: var(--nn-duration) var(--nn-ease);
+  --nn-transition-fast: var(--nn-duration-fast) var(--nn-ease);
+  --nn-transition-slow: var(--nn-duration-slow) var(--nn-ease);
+
+  /* —— 白天 —— */
+  --nn-shadow: 0 1px 4px rgba(0, 21, 41, 0.06);
+  --nn-shadow-hover: 0 4px 14px rgba(0, 21, 41, 0.1);
+  --nn-card-inset: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  --nn-card-inset-hover: inset 0 0 12px rgba(0, 0, 0, 0.08);
+
+  --nn-sidebar-bg: #ffffff;
+  /* 侧栏与内容区一致：实色白底，无磨砂 */
+  --nn-sidebar-glass-bg: var(--nn-section-bg);
+  --nn-sidebar-glass-border: transparent;
+  --nn-sidebar-blur: 0px;
+  --nn-panel-shadow: 0 2px 10px rgba(0, 21, 41, 0.08);
+  --nn-sidebar-pad: 6px;
+  --nn-sidebar-logo-bg: #ffffff;
+  --nn-sidebar-logo-text: #303133;
+  --nn-sidebar-text: #303133;
+  --nn-sidebar-text-active: var(--nn-primary);
+  --nn-menu-hover-bg: rgba(0, 0, 0, 0.05);
+
+  --nn-header-bg: #ffffff;
+  /* 顶栏磨砂玻璃 */
+  --nn-header-glass-bg: rgba(255, 255, 255, 0.25);
+  --nn-header-glass-border: rgba(255, 255, 255, 0.18);
+  --nn-header-blur: 6px;
+  --nn-header-shadow: rgba(142, 142, 142, 0.19) 0px 6px 15px 0px;
+  --nn-header-radius: 12px;
+
+  --nn-page-bg: #f2f4f7;
+  --nn-section-bg: #ffffff;
+  --nn-surface-bg: transparent;
+  /* 网址卡片：更浅的灰 + 内嵌阴影 */
+  --nn-card-bg: #f5f6f8;
+  --nn-card-bg-hover: #eef0f4;
+  --nn-tab-bg: #eef0f3;
+  --nn-tab-hover-bg: color-mix(in srgb, var(--el-color-primary) 12%, #eef0f3);
+  --nn-divider: #e6e8eb;
+
+  /* 滚动条（Windows Chrome/Edge/Firefox） */
+  --nn-scrollbar-size: 10px;
+  --nn-scrollbar-thumb-size: 4px;
+  --nn-scrollbar-thumb: #c0c4cc;
+  --nn-scrollbar-thumb-hover: #909399;
+  --nn-scrollbar-track: transparent;
+}
+
+html.dark {
+  /* 覆盖 Element Plus dark css-vars 默认蓝主色 */
+  --nn-primary: #f1404b;
+  --nn-primary-rgb: 241, 64, 75;
+  --el-color-primary: #f1404b;
+  --el-color-primary-rgb: 241, 64, 75;
+  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #1a1c20);
+  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #1a1c20);
+  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #1a1c20);
+  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #1a1c20);
+  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #1a1c20);
+  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 75%, #fff);
+
+  /* —— 黑夜 —— */
+  --nn-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  --nn-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --nn-card-inset: inset 0 0 10px rgba(0, 0, 0, 0.35);
+  --nn-card-inset-hover: inset 0 0 12px rgba(0, 0, 0, 0.45);
+
+  --nn-item-active-bg: #2a2e36;
+  --nn-item-hover-bg: #2a2e36;
+
+  --nn-sidebar-bg: #1a1c20;
+  --nn-sidebar-glass-bg: var(--nn-section-bg);
+  --nn-sidebar-glass-border: transparent;
+  --nn-sidebar-blur: 0px;
+  --nn-panel-shadow: 0 2px 12px rgba(0, 0, 0, 0.32);
+  --nn-sidebar-pad: 6px;
+  --nn-sidebar-logo-bg: #1a1c20;
+  --nn-sidebar-logo-text: #ffffff;
+  --nn-sidebar-text: rgba(255, 255, 255, 0.78);
+  --nn-sidebar-text-active: #f1404b;
+  --nn-menu-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --nn-header-bg: #1a1c20;
+  --nn-header-glass-bg: rgba(255, 255, 255, 0.08);
+  --nn-header-glass-border: rgba(255, 255, 255, 0.18);
+  --nn-header-blur: 6px;
+  --nn-header-shadow: rgba(0, 0, 0, 0.28) 0px 6px 15px 0px;
+  --nn-header-radius: 12px;
+
+  --nn-page-bg: #0f1115;
+  --nn-section-bg: #1a1c20;
+  --nn-surface-bg: transparent;
+  --nn-card-bg: #22252b;
+  --nn-card-bg-hover: #282c34;
+  --nn-tab-bg: #252830;
+  --nn-tab-hover-bg: color-mix(in srgb, var(--el-color-primary) 18%, #252830);
+  --nn-divider: #2a2e36;
+
+  --nn-scrollbar-thumb: #5c6370;
+  --nn-scrollbar-thumb-hover: #8b929e;
+  --nn-scrollbar-track: transparent;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--el-font-family);
+  color: var(--el-text-color-primary);
+  background-color: var(--nn-page-bg);
+  font-size: var(--el-font-size-base);
+  transition:
+    background-color var(--nn-transition-slow),
+    color var(--nn-transition-slow);
+}
+
+/* SortableJS 拖拽态 */
+.nn-sortable-ghost {
+  opacity: 0.45;
+}
+
+.nn-sortable-chosen {
+  box-shadow: var(--nn-card-inset-hover);
+}
+
+.nn-sortable-drag {
+  opacity: 1 !important;
+  cursor: grabbing !important;
+  z-index: 10;
+}
+
+/* Vue 切换淡入淡出 */
+.nn-fade-enter-active,
+.nn-fade-leave-active {
+  transition:
+    opacity var(--nn-transition),
+    transform var(--nn-transition);
+}
+
+.nn-fade-enter-from,
+.nn-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.nn-fade-enter-to,
+.nn-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+/*
+ * 注意：Chromium / Edge 上不要设置 scrollbar-width / scrollbar-color，
+ * 否则会覆盖 ::-webkit-scrollbar，回退成 Windows 原生滚动条（带上下箭头）。
+ */
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nn-scrollbar-thumb) var(--nn-scrollbar-track);
+  }
+}
+
+/* Chromium / Edge：自定义滚动条（无箭头） */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: var(--nn-scrollbar-size);
+  height: var(--nn-scrollbar-size);
+  background: transparent;
+}
+
+html::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: var(--nn-scrollbar-track);
+}
+
+html::-webkit-scrollbar-track-piece,
+body::-webkit-scrollbar-track-piece,
+*::-webkit-scrollbar-track-piece {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: var(--nn-scrollbar-thumb);
+  background-clip: padding-box;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  min-height: 48px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+  background: var(--nn-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Element Plus 虚拟滚动条：同款细胶囊 */
+.el-scrollbar__bar {
+  z-index: 3;
+  opacity: 1 !important;
+  background: transparent !important;
+}
+
+.el-scrollbar__bar.is-vertical {
+  width: var(--nn-scrollbar-size) !important;
+  right: 1px;
+  top: 4px !important;
+  bottom: 4px !important;
+}
+
+.el-scrollbar__bar.is-horizontal {
+  height: var(--nn-scrollbar-size) !important;
+  bottom: 1px;
+  left: 4px !important;
+  right: 4px !important;
+}
+
+.el-scrollbar__thumb {
+  background: var(--nn-scrollbar-thumb) !important;
+  border-radius: 999px !important;
+  opacity: 1 !important;
+  width: var(--nn-scrollbar-thumb-size) !important;
+  margin-inline: auto;
+}
+
+.el-scrollbar__bar.is-horizontal .el-scrollbar__thumb {
+  width: auto !important;
+  height: var(--nn-scrollbar-thumb-size) !important;
+  margin-block: auto;
+  background: var(--nn-scrollbar-thumb) !important;
+}
+
+.el-scrollbar__thumb:hover,
+.el-scrollbar__thumb:active {
+  background: var(--nn-scrollbar-thumb-hover) !important;
+  opacity: 1 !important;
+}
+
+/* 统一圆角 */
+.el-card,
+.el-dialog,
+.el-message-box,
+.el-dropdown-menu,
+.el-select-dropdown,
+.el-popover.el-popper,
+.el-upload-dragger,
+.el-input__wrapper,
+.el-textarea__inner,
+.el-button,
+.el-tag,
+.el-alert,
+.el-skeleton__item {
+  border-radius: var(--nn-radius) !important;
+}
+
+/* 容器去边框，用阴影 */
+.el-card,
+.el-dialog,
+.el-message-box,
+.el-dropdown-menu,
+.el-select-dropdown,
+.el-popover.el-popper,
+.el-upload-dragger {
+  border: none !important;
+  box-shadow: var(--nn-shadow) !important;
+}
+
+.el-card.is-hover-shadow:hover,
+.el-card.is-always-shadow {
+  box-shadow: var(--nn-shadow-hover) !important;
+}
+
+.el-input-group__append,
+.el-input-group__prepend {
+  border-radius: 0 !important;
+}
+
+.el-input-group > .el-input__wrapper {
+  border-radius: 0 !important;
+}
+
+.el-input-group--prepend .el-input__wrapper {
+  border-top-right-radius: var(--nn-radius) !important;
+  border-bottom-right-radius: var(--nn-radius) !important;
+}
+
+.el-input-group--append .el-input__wrapper {
+  border-top-left-radius: var(--nn-radius) !important;
+  border-bottom-left-radius: var(--nn-radius) !important;
+}
+
+.el-input-group__prepend {
+  border-top-left-radius: var(--nn-radius) !important;
+  border-bottom-left-radius: var(--nn-radius) !important;
+}
+
+.el-input-group__append {
+  border-top-right-radius: var(--nn-radius) !important;
+  border-bottom-right-radius: var(--nn-radius) !important;
+}
+
+/* —— 全局交互项：圆角 + 边距高亮 —— */
+.el-dropdown-menu__item {
+  margin: 4px 6px !important;
+  border-radius: var(--nn-item-radius) !important;
+  padding: 8px 12px !important;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover,
+.el-dropdown-menu__item:not(.is-disabled):focus {
+  background-color: var(--nn-item-hover-bg) !important;
+  color: var(--nn-primary) !important;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover .el-icon,
+.el-dropdown-menu__item:not(.is-disabled):focus .el-icon {
+  color: var(--nn-primary) !important;
+}
+
+.el-select-dropdown__item {
+  margin: 2px 6px !important;
+  border-radius: var(--nn-item-radius) !important;
+}
+
+.el-select-dropdown__item.is-hovering,
+.el-select-dropdown__item:hover {
+  background-color: var(--nn-item-hover-bg) !important;
+  color: var(--nn-primary) !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  background-color: var(--nn-item-active-bg) !important;
+  color: var(--nn-primary) !important;
+  font-weight: 600;
+}
+
+.el-button.is-text,
+.el-button.is-link {
+  border-radius: var(--nn-item-radius) !important;
+}
+
+.el-button.is-text:hover,
+.el-button.is-text:focus {
+  background-color: var(--nn-item-hover-bg) !important;
+  color: var(--el-color-primary) !important;
+}
+
+.el-radio-button__inner {
+  border-radius: var(--nn-item-radius) !important;
+}
+
+.el-radio-group .el-radio-button:first-child .el-radio-button__inner {
+  border-radius: var(--nn-item-radius) 0 0 var(--nn-item-radius) !important;
+}
+
+.el-radio-group .el-radio-button:last-child .el-radio-button__inner {
+  border-radius: 0 var(--nn-item-radius) var(--nn-item-radius) 0 !important;
+}
+
+.el-pager li {
+  border-radius: var(--nn-item-radius) !important;
+  margin: 0 3px !important;
+}
+
+.el-breadcrumb__inner {
+  border-radius: var(--nn-item-radius);
+  padding: 2px 6px;
+  transition:
+    background-color var(--nn-transition-fast),
+    color var(--nn-transition-fast);
+}
+
+.el-breadcrumb__inner:hover {
+  background-color: var(--nn-item-hover-bg);
+  color: var(--el-color-primary) !important;
+}
+
+/* 宽侧栏时隐藏纯文字 tooltip（二级弹出层保留） */
+html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 侧栏二级悬浮：每行最多 3 个，白框贴合内容，四边等距 */
+.nn-sidebar-popup.el-popper:has(.el-menu),
+.nn-sidebar-popup.el-popper.is-light:has(.el-menu),
+.nn-sidebar-popup.el-popper.is-dark:has(.el-menu),
+.el-popper.nn-sidebar-popup:has(.el-menu),
+.nn-sidebar-popup.el-menu--popup-container {
+  --el-popper-bg-color-light: var(--nn-section-bg);
+  --el-bg-color-overlay: var(--nn-section-bg);
+  --el-fill-color-blank: var(--nn-section-bg);
+  background: var(--nn-section-bg) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 6px !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  min-width: unset !important;
+  width: fit-content !important;
+  max-width: none !important;
+  height: fit-content !important;
+  min-height: unset !important;
+  color: var(--nn-sidebar-text) !important;
+  overflow: visible !important;
+}
+
+.nn-sidebar-popup.el-popper:has(.el-menu) .el-popper__arrow,
+.nn-sidebar-popup:has(.el-menu) .el-popper__arrow,
+.nn-sidebar-popup.el-menu--popup-container .el-popper__arrow {
+  display: none !important;
+}
+
+.nn-sidebar-popup.el-menu--popup-container,
+.nn-sidebar-popup .el-menu--popup-container {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-width: unset !important;
+  width: fit-content !important;
+  height: fit-content !important;
+}
+
+.nn-sidebar-popup .el-menu--popup,
+.nn-sidebar-popup.el-menu--popup,
+.nn-sidebar-popup .el-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-hover-bg-color: transparent;
+  --el-menu-base-level-padding: 0;
+  display: grid !important;
+  grid-template-columns: repeat(3, max-content) !important;
+  align-items: center !important;
+  justify-content: start !important;
+  justify-items: stretch !important;
+  gap: 6px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-width: unset !important;
+  width: fit-content !important;
+  max-width: none !important;
+  height: fit-content !important;
+  min-height: unset !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+/* 仅 1 / 2 项时不要占满 3 列，避免右侧空白 */
+.nn-sidebar-popup .el-menu:has(> .el-menu-item:only-child),
+.nn-sidebar-popup .el-menu--popup:has(> .el-menu-item:only-child) {
+  grid-template-columns: max-content !important;
+}
+
+.nn-sidebar-popup .el-menu:has(> .el-menu-item:nth-child(2):last-child),
+.nn-sidebar-popup .el-menu--popup:has(> .el-menu-item:nth-child(2):last-child) {
+  grid-template-columns: repeat(2, max-content) !important;
+}
+
+.nn-sidebar-popup .el-menu-item,
+.nn-sidebar-popup .el-sub-menu__title {
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  padding: 10px 16px !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  color: var(--nn-sidebar-text) !important;
+  background: var(--nn-tab-bg, #eef0f3) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  width: auto !important;
+  max-width: none !important;
+  flex: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  transition: color var(--nn-transition-fast) !important;
+}
+
+/* 胶囊内只保留文字，与参考图一致 */
+.nn-sidebar-popup .el-menu-item .menu-icon,
+.nn-sidebar-popup .el-menu-item .el-icon {
+  display: none !important;
+}
+
+/* 悬停：仅文字高亮，背景不变 */
+.nn-sidebar-popup .el-menu-item:hover,
+.nn-sidebar-popup .el-sub-menu__title:hover,
+.nn-sidebar-popup .el-menu-item:focus {
+  background-color: var(--nn-tab-bg, #eef0f3) !important;
+  color: var(--nn-primary) !important;
+}
+
+.nn-sidebar-popup .el-menu-item.is-active {
+  background-color: var(--nn-tab-bg, #eef0f3) !important;
+  color: var(--nn-primary) !important;
+  font-weight: 650 !important;
+}
+
+/* 折叠侧栏纯文字 tip：灰底白字，与展开/收起按钮一致 */
+.nn-sidebar-popup.el-popper:not(:has(.el-menu)):not(.el-menu--popup-container),
+.nn-sidebar-popup.el-popper.is-dark:not(:has(.el-menu)),
+.nn-sidebar-popup.el-popper.is-light:not(:has(.el-menu)),
+.el-popper.nn-sidebar-popup:not(:has(.el-menu)):not(.el-menu--popup-container),
+.nn-sidebar-popup.el-tooltip__popper,
+.el-tooltip__popper.nn-sidebar-popup {
+  background: #303133 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 5px 11px !important;
+  box-shadow: var(--el-box-shadow-light) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  min-width: 0 !important;
+  width: max-content !important;
+  max-width: 240px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.2 !important;
+  overflow: visible !important;
+}
+
+.nn-sidebar-popup.el-popper:not(:has(.el-menu)) .el-popper__arrow::before,
+.nn-sidebar-popup.el-tooltip__popper .el-popper__arrow::before,
+.el-tooltip__popper.nn-sidebar-popup .el-popper__arrow::before {
+  background: #303133 !important;
+  border: none !important;
+}
+
+/* ========== 系统表单语汇：小圆角实色 + 搜索框同款内凹输入 ========== */
+.nn-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nn-field-label {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--el-text-color-secondary);
+  letter-spacing: 0.02em;
+
+  em {
+    font-style: normal;
+    color: var(--nn-primary);
+  }
+}
+
+.nn-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  background: var(--nn-section-bg);
+  border-radius: var(--nn-item-radius, 8px);
+  box-shadow: var(--nn-card-inset);
+  transition: box-shadow var(--nn-transition-fast);
+
+  &:focus-within {
+    box-shadow:
+      var(--nn-card-inset),
+      0 0 0 1px color-mix(in srgb, var(--nn-primary) 35%, transparent);
+  }
+}
+
+.nn-field--area {
+  align-items: stretch;
+  min-height: 0;
+  padding: 10px 12px;
+}
+
+.nn-field--select {
+  padding: 0;
+  overflow: hidden;
+
+  .el-select {
+    width: 100%;
+  }
+
+  .el-select__wrapper {
+    min-height: 44px !important;
+    padding: 6px 12px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  .el-select__placeholder,
+  .el-select__selected-item {
+    font-size: 14px;
+  }
+}
+
+.nn-field__icon {
+  flex-shrink: 0;
+  color: var(--el-text-color-secondary);
+}
+
+.nn-field__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--el-text-color-primary);
+  font-family: inherit;
+
+  &::placeholder {
+    color: var(--el-text-color-placeholder);
+  }
+}
+
+.nn-field__textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 56px;
+  line-height: 1.5;
+}
+
+.nn-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--nn-item-radius);
+  background: var(--nn-tab-bg);
+}
+
+.nn-seg__btn {
+  border: 0;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 6px 10px;
+  border-radius: calc(var(--nn-item-radius) - 2px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--nn-transition-fast),
+    color var(--nn-transition-fast);
+
+  &:hover:not(.active) {
+    background: var(--nn-item-hover-bg);
+    color: var(--nn-primary);
+  }
+
+  &.active {
+    background: var(--nn-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.nn-btn {
+  min-width: 88px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--nn-item-radius);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background var(--nn-transition-fast),
+    color var(--nn-transition-fast),
+    filter var(--nn-transition-fast);
+
+  &--ghost {
+    background: var(--nn-tab-bg);
+    color: var(--el-text-color-regular);
+
+    &:hover {
+      background: var(--nn-item-hover-bg);
+      color: var(--nn-primary);
+    }
+  }
+
+  &--primary {
+    background: var(--nn-primary);
+    color: #fff;
+
+    &:hover {
+      filter: brightness(1.05);
+    }
+  }
+
+  &--danger {
+    background: color-mix(in srgb, var(--el-color-danger) 12%, var(--nn-tab-bg));
+    color: var(--el-color-danger);
+
+    &:hover {
+      background: color-mix(in srgb, var(--el-color-danger) 18%, var(--nn-tab-bg));
+    }
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: none;
+  }
+}
+
+.nn-panel {
+  background: var(--nn-section-bg);
+  border-radius: var(--nn-item-radius, 8px);
+  box-shadow: var(--nn-panel-shadow);
+  padding: 18px 20px 20px;
+  box-sizing: border-box;
+}
+
+.nn-panel__title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+  letter-spacing: -0.01em;
+}
+
+.nn-dlg-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.nn-dlg-head__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--el-text-color-primary);
+  line-height: 1.3;
+}
+
+.nn-dlg-head__hint {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
+}
+
+.nn-dlg-head__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: var(--nn-item-radius);
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background var(--nn-transition-fast),
+    color var(--nn-transition-fast);
+
+  &:hover {
+    background: var(--nn-item-hover-bg);
+    color: var(--nn-primary);
+  }
+}
+
+.nn-dlg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nn-dlg-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.nn-dialog.el-dialog {
+  border-radius: var(--nn-item-radius, 8px) !important;
+  background: var(--nn-section-bg) !important;
+  border: none !important;
+  box-shadow: var(--nn-panel-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden;
+}
+
+.nn-dialog .el-dialog__header {
+  padding: 20px 20px 8px !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+.nn-dialog .el-dialog__body {
+  padding: 8px 20px 4px !important;
+}
+
+.nn-dialog .el-dialog__footer {
+  padding: 16px 20px 20px !important;
+  border: 0 !important;
+}
+
+.nn-select-popper.el-select__popper,
+.nn-select-popper.el-popper {
+  border-radius: var(--nn-item-radius, 8px) !important;
+  border: none !important;
+  background: var(--nn-section-bg) !important;
+  box-shadow: var(--nn-panel-shadow) !important;
+  overflow: hidden;
+
+  .el-select-dropdown__item.is-selected {
+    color: var(--nn-primary) !important;
+
+    .cat-option,
+    .nav-icon,
+    span {
+      color: var(--nn-primary) !important;
+    }
+  }
+
+  .el-select-dropdown__item.is-hovering,
+  .el-select-dropdown__item:hover {
+    color: var(--nn-primary) !important;
+
+    .cat-option,
+    .nav-icon,
+    span {
+      color: var(--nn-primary) !important;
+    }
+  }
+}
+

@@ -1,0 +1,36 @@
+{
+  "name": "nice-nav-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "build:extension": "vue-tsc -b && vite build --config vite.config.extension.ts",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@iconify/vue": "^5.0.3",
+    "dexie": "^4.0.11",
+    "element-plus": "^2.9.7",
+    "pinia": "^3.0.1",
+    "sortablejs": "^1.15.7",
+    "vue": "^3.5.42",
+    "vue-router": "^4.5.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/sortablejs": "^1.15.9",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/tsconfig": "^0.9.1",
+    "sass": "^1.86.0",
+    "typescript": "~5.8.0",
+    "unplugin-auto-import": "^19.1.2",
+    "unplugin-vue-components": "^28.4.1",
+    "vite": "^6.2.3",
+    "vue-tsc": "^2.2.8"
+  }
+}
