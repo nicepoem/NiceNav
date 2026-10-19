@@ -40,9 +40,11 @@ export {
   createExportPayload,
   downloadExportFilename,
   exportToJson,
+  faviconCandidates,
   faviconUrl,
   filterSites,
   resolveSiteIcon,
+  siteHostname,
   validateImportJson,
 } from './import-export'
 export type { NavStorage } from './storage/types'

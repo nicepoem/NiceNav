@@ -7,6 +7,7 @@ import ModuleHost from '@/modules/ModuleHost.vue'
 import { NAV_HOST_KEY, NAV_MAIN_HANDLERS_KEY } from '@/modules/nav'
 import SiteFormDialog from '@/components/site/SiteFormDialog.vue'
 import CategoryFormDialog from '@/components/site/CategoryFormDialog.vue'
+import CategoryManagerDialog from '@/components/site/CategoryManagerDialog.vue'
 import CreateFormDialog, {
   type CreateTab,
 } from '@/components/site/CreateFormDialog.vue'
@@ -19,6 +20,7 @@ const createDialog = ref(false)
 const createTab = ref<CreateTab>('site')
 const siteDialog = ref(false)
 const categoryDialog = ref(false)
+const categoryManagerDialog = ref(false)
 const importDialog = ref(false)
 const editingSite = ref<Site | null>(null)
 const editingCategory = ref<Category | null>(null)
@@ -26,7 +28,8 @@ const preferCategoryId = ref<string | undefined>()
 
 function openCreate(tab: CreateTab = 'site', category?: Category) {
   createTab.value = tab
-  preferCategoryId.value = category?.id
+  // 有子分类的一级会在选择器里落到子级；优先用当前激活分类
+  preferCategoryId.value = category?.id ?? nav.activeCategoryId ?? undefined
   if (tab === 'site' && !nav.categories.length) {
     ElMessage.warning('请先添加一个分类')
     createTab.value = 'category'
@@ -82,9 +85,14 @@ async function removeCategory(category: Category) {
   }
 }
 
+function openManageCategories() {
+  categoryManagerDialog.value = true
+}
+
 provide(NAV_HOST_KEY, {
   mobileOpen,
   openAddSite: () => openAddSite(),
+  openManageCategories,
   openImportData: () => {
     importDialog.value = true
   },
@@ -114,7 +122,11 @@ provide(NAV_MAIN_HANDLERS_KEY, {
       :prefer-category-id="preferCategoryId"
     />
     <CategoryFormDialog v-model="categoryDialog" :category="editingCategory" />
+    <CategoryManagerDialog v-model="categoryManagerDialog" />
     <ImportDialog v-model="importDialog" />
-    <FloatingDock @add-site="openAddSite()" />
+    <FloatingDock
+      @add-site="openAddSite()"
+      @manage-categories="openManageCategories()"
+    />
   </ModuleHost>
 </template>

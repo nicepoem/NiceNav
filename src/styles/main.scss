@@ -629,6 +629,31 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   border: none !important;
 }
 
+/* 网址卡片描述：与侧栏纯文字 tip 同款，宽屏也显示 */
+.nn-site-tip.el-popper,
+.el-popper.nn-site-tip {
+  background: #303133 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 5px 11px !important;
+  box-shadow: var(--el-box-shadow-light) !important;
+  min-width: 0 !important;
+  width: max-content !important;
+  max-width: 280px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.nn-site-tip.el-popper .el-popper__arrow::before,
+.el-popper.nn-site-tip .el-popper__arrow::before {
+  background: #303133 !important;
+  border: none !important;
+}
+
 /* ========== 系统表单语汇：小圆角实色 + 搜索框同款内凹输入 ========== */
 .nn-field-block {
   display: flex;
@@ -922,7 +947,37 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   box-shadow: var(--nn-panel-shadow) !important;
   overflow: hidden;
 
-  .el-select-dropdown__item.is-selected {
+  /* 分类树：有子级的一级仅作层级展示，不可选，悬浮不变色 */
+  .nn-cat-option--parent,
+  .nn-cat-option--parent.is-disabled,
+  .nn-cat-option--parent.is-hovering,
+  .nn-cat-option--parent:hover {
+    height: 36px !important;
+    cursor: default !important;
+    opacity: 1 !important;
+    font-weight: 600;
+    color: var(--el-text-color-primary) !important;
+    background: transparent !important;
+
+    .nav-icon,
+    .option-row__name,
+    span {
+      color: var(--el-text-color-primary) !important;
+    }
+  }
+
+  .nn-cat-option--child {
+    height: 36px !important;
+    /* 相对一级再缩进一档，父子更易区分 */
+    padding-left: 32px !important;
+  }
+
+  /* 最后一个子项竖线只接到中线，形成 └ */
+  .nn-cat-option--child.is-last-child .option-row__rail::before {
+    bottom: 50% !important;
+  }
+
+  .el-select-dropdown__item:not(.nn-cat-option--parent).is-selected {
     color: var(--nn-primary) !important;
 
     .cat-option,
@@ -932,8 +987,8 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
     }
   }
 
-  .el-select-dropdown__item.is-hovering,
-  .el-select-dropdown__item:hover {
+  .el-select-dropdown__item:not(.nn-cat-option--parent).is-hovering,
+  .el-select-dropdown__item:not(.nn-cat-option--parent):hover {
     color: var(--nn-primary) !important;
 
     .cat-option,

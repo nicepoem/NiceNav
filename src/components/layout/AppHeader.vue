@@ -10,6 +10,7 @@ import {
   Rank,
   Check,
   ArrowDown,
+  FolderOpened,
 } from '@element-plus/icons-vue'
 import type { HeaderMenuItem, HeaderMenuLink } from '@nice-nav/core'
 import { normalizeHeaderMenus } from '@nice-nav/core'
@@ -19,6 +20,7 @@ import { useTheme } from '@/composables/useTheme'
 const emit = defineEmits<{
   openMobile: []
   addSite: []
+  manageCategories: []
   importData: []
 }>()
 
@@ -71,8 +73,8 @@ async function toggleTheme() {
         <el-icon :size="20"><Menu /></el-icon>
       </button>
 
-      <div class="navbar-brand mobile-only" title="NICENAV">
-        <span class="navbar-brand__title">NICENAV</span>
+      <div class="navbar-brand mobile-only" title="NiceNav">
+        <span class="navbar-brand__title">NiceNav</span>
       </div>
 
       <nav v-if="headerMenus.length" class="header-menus" aria-label="顶部导航">
@@ -121,6 +123,17 @@ async function toggleTheme() {
       >
         <el-icon :size="16"><Plus /></el-icon>
         <span class="cta-add__label">添加</span>
+      </button>
+
+      <button
+        v-if="!dockOn || nav.settings.dockManageCategories === false"
+        type="button"
+        class="sort-toggle"
+        title="分类管理"
+        @click="emit('manageCategories')"
+      >
+        <el-icon :size="15"><FolderOpened /></el-icon>
+        <span class="sort-toggle__label">分类</span>
       </button>
 
       <button

@@ -26,3 +26,4 @@ Edge 同理：`edge://extensions/`。
 - 扩展会覆盖浏览器「新标签页」
 - 使用 hash 路由（`#/settings`），兼容 `chrome-extension://` 协议
 - 构建使用相对资源路径，可离线加载
+- 添加网址时，扩展后台会请求目标页面以自动识别标题与简介（需 `host_permissions`）

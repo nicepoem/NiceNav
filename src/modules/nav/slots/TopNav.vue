@@ -15,6 +15,7 @@ const host = inject(NAV_HOST_KEY)
         class="nav-top-nav__header"
         @open-mobile="host && (host.mobileOpen.value = true)"
         @add-site="host?.openAddSite()"
+        @manage-categories="host?.openManageCategories()"
         @import-data="host?.openImportData()"
       />
     </div>

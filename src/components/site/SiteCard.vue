@@ -6,7 +6,9 @@ import { useNavStore } from '@/stores/nav'
 import {
   cancelSiteIcon,
   enqueueSiteIcon,
+  invalidateSiteIcon,
   isSiteIconFailed,
+  rememberSiteIcon,
 } from '@/utils/site-icon'
 
 const props = defineProps<{
@@ -28,6 +30,7 @@ let observer: IntersectionObserver | null = null
 
 const hasStoredIcon = computed(() => Boolean(props.site.icon?.trim()))
 const showSkeleton = computed(() => !hasStoredIcon.value && !iconFailed.value)
+const tip = computed(() => props.site.description?.trim() || '')
 
 function enqueueIfNeeded(retry = false) {
   if (hasStoredIcon.value || !rootEl.value) return
@@ -56,9 +59,9 @@ function setupObserver() {
       }
     },
     {
-      // 视口下方约 200px 预加载带
+      // 视口外提前拉取，减少滚到卡片时才开始请求
       root: null,
-      rootMargin: '200px 0px',
+      rootMargin: '640px 0px',
       threshold: 0.01,
     },
   )
@@ -70,6 +73,7 @@ watch(
   () => {
     iconFailed.value = isSiteIconFailed(props.site.id)
     if (hasStoredIcon.value) {
+      rememberSiteIcon(props.site.url, props.site.icon ?? '')
       cancelSiteIcon(props.site.id)
       observer?.disconnect()
       return
@@ -79,6 +83,7 @@ watch(
 )
 
 onMounted(() => {
+  if (hasStoredIcon.value) rememberSiteIcon(props.site.url, props.site.icon ?? '')
   setupObserver()
 })
 
@@ -89,8 +94,9 @@ onBeforeUnmount(() => {
 })
 
 async function onStoredIconError() {
-  // 已落库地址失效：清空后重新走自动探测
+  // 已落库地址失效：清域名缓存后重新探测
   iconFailed.value = false
+  invalidateSiteIcon(props.site.url)
   await nav.patchSiteIcon(props.site.id, '', { overwrite: true })
   setupObserver()
   enqueueIfNeeded(true)
@@ -103,6 +109,13 @@ function onCardClick() {
 </script>
 
 <template>
+  <el-tooltip
+    :content="tip"
+    placement="top"
+    :show-after="400"
+    :disabled="!tip || sortable"
+    popper-class="nn-site-tip"
+  >
   <article
     ref="rootEl"
     class="url-card"
@@ -115,7 +128,7 @@ function onCardClick() {
         v-if="hasStoredIcon"
         :src="site.icon"
         :alt="site.title"
-        loading="lazy"
+        loading="eager"
         decoding="async"
         referrerpolicy="no-referrer"
         @error="onStoredIconError"
@@ -138,6 +151,7 @@ function onCardClick() {
       <el-button :icon="Delete" text circle size="small" type="danger" title="删除" @click="emit('remove', site)" />
     </div>
   </article>
+  </el-tooltip>
 </template>
 
 <style scoped lang="scss">
@@ -277,12 +291,23 @@ function onCardClick() {
   top: 6px;
   right: 6px;
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 0;
   opacity: 0;
   transition: opacity var(--nn-transition-fast);
-  padding: 2px;
+  padding: 1px;
   background: color-mix(in srgb, var(--el-bg-color) 92%, transparent);
   border-radius: var(--nn-item-radius);
+
+  :deep(.el-button) {
+    margin: 0;
+    width: 26px;
+    height: 26px;
+  }
+
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 900px) {

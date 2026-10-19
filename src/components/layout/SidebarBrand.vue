@@ -1,6 +1,6 @@
 <template>
-  <div class="sidebar-logo" title="NICENAV">
-    <h1 class="sidebar-logo__title">NICENAV</h1>
+  <div class="sidebar-logo" title="NiceNav">
+    <h1 class="sidebar-logo__title">NiceNav</h1>
   </div>
 </template>
 

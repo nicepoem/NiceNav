@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Link, Close } from '@element-plus/icons-vue'
+import { Link, Close, Loading } from '@element-plus/icons-vue'
 import type { Category, Site } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
-import NavIcon from '@/components/common/NavIcon.vue'
+import { useAutoPageMeta } from '@/composables/useAutoPageMeta'
+import {
+  defaultSiteCategoryId,
+  resolveSiteCategoryId,
+} from '@/utils/category-select'
+import CategoryTreeSelect from '@/components/site/CategoryTreeSelect.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -29,6 +34,23 @@ const form = reactive({
   tags: '',
 })
 
+const {
+  fetchingMeta,
+  markTitleTouched,
+  markDescriptionTouched,
+  markIconTouched,
+  runHydrate,
+  scheduleFetch,
+  fetchNow,
+} = useAutoPageMeta({
+  form,
+  urlProtocol,
+  getUrlHost: () => form.url,
+  setUrlHost: (hostPath) => {
+    form.url = hostPath
+  },
+})
+
 const visible = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
@@ -37,7 +59,9 @@ const visible = computed({
 const isEdit = computed(() => Boolean(props.site?.id))
 const dialogTitle = computed(() => (isEdit.value ? '编辑网址' : '添加网址'))
 const dialogHint = computed(() =>
-  isEdit.value ? '修改站点信息后保存到本地导航' : '填写站点信息，保存到本地导航',
+  isEdit.value
+    ? '修改链接后自动识别标题与简介'
+    : '粘贴链接后自动识别标题与简介',
 )
 
 function splitUrl(raw: string) {
@@ -58,16 +82,19 @@ watch(
   () => [props.modelValue, props.site, props.preferCategoryId] as const,
   ([open]) => {
     if (!open) return
-    const site = props.site
-    form.id = site?.id
-    form.title = site?.title ?? ''
-    form.url = site?.url ? splitUrl(site.url) : ''
-    if (!site?.url) urlProtocol.value = 'https://'
-    form.description = site?.description ?? ''
-    form.categoryId =
-      site?.categoryId ?? props.preferCategoryId ?? props.categories[0]?.id ?? ''
-    form.icon = site?.icon ?? ''
-    form.tags = site?.tags?.join(', ') ?? ''
+    runHydrate(() => {
+      const site = props.site
+      form.id = site?.id
+      form.title = site?.title ?? ''
+      form.url = site?.url ? splitUrl(site.url) : ''
+      if (!site?.url) urlProtocol.value = 'https://'
+      form.description = site?.description ?? ''
+      form.categoryId = site?.categoryId
+        ? resolveSiteCategoryId(site.categoryId, props.categories)
+        : defaultSiteCategoryId(props.categories, props.preferCategoryId)
+      form.icon = site?.icon ?? ''
+      form.tags = site?.tags?.join(', ') ?? ''
+    })
   },
 )
 
@@ -81,18 +108,25 @@ async function submit() {
     const url = `${urlProtocol.value}${host}`
     new URL(url)
 
+    const categoryId = resolveSiteCategoryId(form.categoryId, props.categories)
+    if (!categoryId) {
+      ElMessage.warning('请选择分类')
+      return
+    }
+
     await nav.upsertSite({
       id: form.id,
       title: form.title.trim(),
       url,
       description: form.description.trim() || undefined,
-      categoryId: form.categoryId,
+      categoryId,
       icon: form.icon.trim() || undefined,
       tags: form.tags
         .split(/[,，]/)
         .map((t) => t.trim())
         .filter(Boolean),
     })
+    nav.activeCategoryId = categoryId
     ElMessage.success(isEdit.value ? '已更新网址' : '已添加网址')
     visible.value = false
   } catch (e) {
@@ -129,20 +163,13 @@ async function submit() {
 
     <div class="nn-dlg-body">
       <label class="nn-field-block">
-        <span class="nn-field-label">标题 <em>*</em></span>
-        <div class="nn-field">
-          <input
-            v-model="form.title"
-            class="nn-field__input"
-            type="text"
-            placeholder="例如 GitHub"
-            autocomplete="off"
-          />
-        </div>
-      </label>
-
-      <label class="nn-field-block">
-        <span class="nn-field-label">链接 <em>*</em></span>
+        <span class="nn-field-label">
+          链接 <em>*</em>
+          <span v-if="fetchingMeta" class="meta-fetching">
+            <el-icon class="is-loading" :size="12"><Loading /></el-icon>
+            正在识别…
+          </span>
+        </span>
         <div class="nn-field nn-field--url">
           <el-icon class="nn-field__icon" :size="16"><Link /></el-icon>
           <div class="nn-seg" role="group" aria-label="协议">
@@ -150,7 +177,7 @@ async function submit() {
               type="button"
               class="nn-seg__btn"
               :class="{ active: urlProtocol === 'https://' }"
-              @click="urlProtocol = 'https://'"
+              @click="urlProtocol = 'https://'; scheduleFetch(120)"
             >
               Https
             </button>
@@ -158,7 +185,7 @@ async function submit() {
               type="button"
               class="nn-seg__btn"
               :class="{ active: urlProtocol === 'http://' }"
-              @click="urlProtocol = 'http://'"
+              @click="urlProtocol = 'http://'; scheduleFetch(120)"
             >
               Http
             </button>
@@ -170,6 +197,22 @@ async function submit() {
             placeholder="example.com/path"
             autocomplete="off"
             spellcheck="false"
+            @input="scheduleFetch()"
+            @blur="fetchNow()"
+          />
+        </div>
+      </label>
+
+      <label class="nn-field-block">
+        <span class="nn-field-label">标题 <em>*</em></span>
+        <div class="nn-field">
+          <input
+            v-model="form.title"
+            class="nn-field__input"
+            type="text"
+            placeholder="粘贴链接后自动填写"
+            autocomplete="off"
+            @input="markTitleTouched"
           />
         </div>
       </label>
@@ -177,24 +220,11 @@ async function submit() {
       <label class="nn-field-block">
         <span class="nn-field-label">分类 <em>*</em></span>
         <div class="nn-field nn-field--select">
-          <el-select
+          <CategoryTreeSelect
             v-model="form.categoryId"
+            :tree="nav.categoryTree"
             placeholder="选择分类"
-            teleported
-            popper-class="nn-select-popper"
-          >
-            <el-option
-              v-for="cat in categories"
-              :key="cat.id"
-              :label="cat.name"
-              :value="cat.id"
-            >
-              <span class="cat-option">
-                <NavIcon :icon="cat.icon" :size="16" />
-                {{ cat.name }}
-              </span>
-            </el-option>
-          </el-select>
+          />
         </div>
       </label>
 
@@ -205,7 +235,8 @@ async function submit() {
             v-model="form.description"
             class="nn-field__input nn-field__textarea"
             rows="2"
-            placeholder="一句话介绍这个站点（可选）"
+            placeholder="粘贴链接后自动填写（可改）"
+            @input="markDescriptionTouched"
           />
         </div>
       </label>
@@ -221,6 +252,7 @@ async function submit() {
               placeholder="留空自动获取 favicon"
               autocomplete="off"
               spellcheck="false"
+              @input="markIconTouched"
             />
           </div>
         </label>
@@ -268,9 +300,14 @@ async function submit() {
   }
 }
 
-.cat-option {
+.meta-fetching {
+  margin-left: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nn-primary);
+  font-style: normal;
 }
 </style>

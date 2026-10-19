@@ -44,11 +44,22 @@ const settingsSchema = z
     dockBackTop: z.boolean().optional(),
     dockTheme: z.boolean().optional(),
     dockAddSite: z.boolean().optional(),
+    dockManageCategories: z.boolean().optional(),
     dockSort: z.boolean().optional(),
     dockExport: z.boolean().optional(),
     dockImport: z.boolean().optional(),
     dockOrder: z
-      .array(z.enum(['backTop', 'addSite', 'sort', 'theme', 'export', 'import']))
+      .array(
+        z.enum([
+          'backTop',
+          'addSite',
+          'manageCategories',
+          'sort',
+          'theme',
+          'export',
+          'import',
+        ]),
+      )
       .optional(),
     headerMenus: z
       .array(

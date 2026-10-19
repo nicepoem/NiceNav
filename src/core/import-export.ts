@@ -154,15 +154,40 @@ export function buildSearchEngineUrl(template: string, query: string): string {
   return template.replace('{q}', encodeURIComponent(query.trim()))
 }
 
-/** 自动获取 favicon（单源，避免多源串行拖慢加载） */
-export function faviconUrl(siteUrl: string): string {
+/** 从站点 URL 解析 hostname */
+export function siteHostname(siteUrl: string): string {
   try {
-    const host = new URL(siteUrl).hostname
-    if (!host) return ''
-    return `https://icons.duckduckgo.com/ip3/${host}.ico`
+    return new URL(siteUrl).hostname || ''
   } catch {
     return ''
   }
+}
+
+/**
+ * favicon 候选：国内源优先，国外源兜底。
+ * 调用方应串行尝试：当前源失败后再请求下一个。
+ */
+export function faviconCandidates(siteUrl: string): string[] {
+  const host = siteHostname(siteUrl)
+  if (!host) return []
+  const enc = encodeURIComponent(host)
+  return [
+    // 国内节点
+    `https://api.iowen.cn/favicon/${host}.png`,
+    `https://cravatar.com/favicon/api/index.php?url=${enc}`,
+    `https://favicon.cccyun.cc/${host}`,
+    // 直连站点自身（国内站往往很快）
+    `https://${host}/favicon.ico`,
+    // 国外兜底
+    `https://www.google.com/s2/favicons?domain=${enc}&sz=64`,
+    `https://icons.duckduckgo.com/ip3/${host}.ico`,
+    `https://icon.horse/icon/${host}`,
+  ]
+}
+
+/** 兼容旧调用：返回最快的候选 */
+export function faviconUrl(siteUrl: string): string {
+  return faviconCandidates(siteUrl)[0] ?? ''
 }
 
 /** 优先自定义 icon，否则返回自动 favicon URL */

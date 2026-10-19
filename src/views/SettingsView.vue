@@ -102,6 +102,7 @@ const form = reactive({
   dockBackTop: true,
   dockTheme: true,
   dockAddSite: true,
+  dockManageCategories: true,
   dockSort: true,
   dockOrder: normalizeDockOrder() as DockButtonId[],
   headerMenus: [] as HeaderMenuDraft[],
@@ -110,16 +111,22 @@ const form = reactive({
 const dockLabels: Record<DockButtonId, string> = {
   backTop: '返回顶部',
   addSite: '添加网址',
+  manageCategories: '分类管理',
   sort: '排序',
   theme: '主题切换',
 }
 
 const dockFlagKey: Record<
   DockButtonId,
-  'dockBackTop' | 'dockAddSite' | 'dockSort' | 'dockTheme'
+  | 'dockBackTop'
+  | 'dockAddSite'
+  | 'dockManageCategories'
+  | 'dockSort'
+  | 'dockTheme'
 > = {
   backTop: 'dockBackTop',
   addSite: 'dockAddSite',
+  manageCategories: 'dockManageCategories',
   sort: 'dockSort',
   theme: 'dockTheme',
 }
@@ -160,6 +167,7 @@ watch(
     form.dockBackTop = s.dockBackTop !== false
     form.dockTheme = s.dockTheme !== false
     form.dockAddSite = s.dockAddSite !== false
+    form.dockManageCategories = s.dockManageCategories !== false
     form.dockSort = s.dockSort !== false
     form.dockOrder = normalizeDockOrder(s.dockOrder)
     form.headerMenus = menusToDrafts(s.headerMenus ?? [])
@@ -225,6 +233,7 @@ async function save() {
     dockBackTop: form.dockBackTop,
     dockTheme: form.dockTheme,
     dockAddSite: form.dockAddSite,
+    dockManageCategories: form.dockManageCategories,
     dockSort: form.dockSort,
     dockOrder: normalizeDockOrder(form.dockOrder),
     headerMenus: draftsToMenus(form.headerMenus),

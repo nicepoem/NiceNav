@@ -9,6 +9,7 @@ import { createId } from './id'
 export const DEFAULT_DOCK_ORDER: DockButtonId[] = [
   'backTop',
   'addSite',
+  'manageCategories',
   'sort',
   'theme',
 ]
@@ -107,6 +108,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dockBackTop: true,
   dockTheme: true,
   dockAddSite: true,
+  dockManageCategories: true,
   dockSort: true,
   dockExport: true,
   dockImport: true,

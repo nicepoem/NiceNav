@@ -204,13 +204,27 @@ watch(
   },
 )
 
-function onSelect(index: string) {
-  nav.activeCategoryId = index
-  document.getElementById(`category-${index}`)?.scrollIntoView({
+function jumpToCategory(id: string) {
+  nav.activeCategoryId = id
+  const block =
+    document.querySelector<HTMLElement>(`.cat-block[id="category-${CSS.escape(id)}"]`) ??
+    document.getElementById(`category-${id}`)
+  block?.scrollIntoView({
     behavior: 'smooth',
     block: 'start',
   })
   emit('closeMobile')
+}
+
+function onSelect(index: string) {
+  jumpToCategory(index)
+}
+
+/** 有子分类时，点击父级标题直接滚到该分类区块，不必先点子分类 */
+function onParentClick(id: string, event: MouseEvent) {
+  const target = event.target
+  if (target instanceof Element && target.closest('.el-menu-item')) return
+  jumpToCategory(id)
 }
 
 async function toggleCollapse() {
@@ -283,6 +297,7 @@ async function toggleCollapse() {
               :index="node.id"
               class="nn-sortable-cat"
               :data-cat-id="node.id"
+              @click="onParentClick(node.id, $event)"
             >
               <template #title>
                 <el-icon class="menu-icon" :size="18">

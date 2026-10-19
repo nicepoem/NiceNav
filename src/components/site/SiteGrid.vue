@@ -41,7 +41,8 @@ function setupObserver() {
       threshold: [0, 0.2, 0.5],
     },
   )
-  document.querySelectorAll('[id^="category-"]').forEach((el) => observer?.observe(el))
+  // 只观察一级分类块，避免子分类 tab 的 id 干扰滚动定位
+  document.querySelectorAll('.cat-block[id^="category-"]').forEach((el) => observer?.observe(el))
 }
 
 onMounted(() => setupObserver())

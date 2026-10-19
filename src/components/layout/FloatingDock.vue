@@ -7,6 +7,7 @@ import {
   Plus,
   Rank,
   Check,
+  FolderOpened,
 } from '@element-plus/icons-vue'
 import type { DockButtonId } from '@nice-nav/core'
 import { normalizeDockOrder } from '@nice-nav/core'
@@ -15,6 +16,7 @@ import { useTheme } from '@/composables/useTheme'
 
 const emit = defineEmits<{
   addSite: []
+  manageCategories: []
 }>()
 
 const nav = useNavStore()
@@ -27,6 +29,7 @@ const flags = computed(() => ({
   backTop: nav.settings.dockBackTop !== false,
   theme: nav.settings.dockTheme !== false,
   addSite: nav.settings.dockAddSite !== false,
+  manageCategories: nav.settings.dockManageCategories !== false,
   sort: nav.settings.dockSort !== false,
 }))
 
@@ -56,6 +59,7 @@ async function toggleTheme() {
 function onClick(id: DockButtonId) {
   if (id === 'backTop') scrollTop()
   else if (id === 'addSite') emit('addSite')
+  else if (id === 'manageCategories') emit('manageCategories')
   else if (id === 'sort') nav.toggleEditMode()
   else if (id === 'theme') void toggleTheme()
 }
@@ -95,6 +99,17 @@ onUnmounted(() => {
         @click="onClick(id)"
       >
         <el-icon :size="18"><Plus /></el-icon>
+      </button>
+
+      <button
+        v-else-if="id === 'manageCategories' && flags.manageCategories"
+        type="button"
+        class="dock-btn"
+        title="分类管理"
+        aria-label="分类管理"
+        @click="onClick(id)"
+      >
+        <el-icon :size="18"><FolderOpened /></el-icon>
       </button>
 
       <button

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { Edit, Delete, MoreFilled } from '@element-plus/icons-vue'
-import type { Category, CategoryTreeNode, Site } from '@nice-nav/core'
+import type { CategoryTreeNode, Site } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
 import { collectSortIds, useSortable } from '@/composables/useSortable'
 import NavIcon from '@/components/common/NavIcon.vue'
@@ -14,8 +13,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   editSite: [site: Site]
   removeSite: [site: Site]
-  editCategory: [category: Category]
-  removeCategory: [category: Category]
 }>()
 
 const nav = useNavStore()
@@ -24,33 +21,55 @@ const children = computed(() => props.node.children)
 const hasChildren = computed(() => children.value.length > 0)
 const canReorder = computed(() => nav.editMode && !nav.searchQuery.trim())
 
+/** 有子分类时只展示子分类 tab（一级有子级时网址只能挂在子级） */
+const tabs = computed(() =>
+  children.value.map((child) => ({
+    id: child.id,
+    name: child.name,
+  })),
+)
+
+const tabIds = computed(() => new Set(tabs.value.map((t) => t.id)))
+
 const activeTabId = ref('')
 const cardsEl = ref<HTMLElement | null>(null)
 const tabsEl = ref<HTMLElement | null>(null)
 
-function pickDefaultTab() {
+function ensureValidTab() {
   if (!hasChildren.value) {
     activeTabId.value = props.node.id
     return
   }
-  const active = nav.activeCategoryId
-  if (active && children.value.some((c) => c.id === active)) {
-    activeTabId.value = active
-    return
-  }
-  if (active === props.node.id) {
-    activeTabId.value = children.value[0]?.id ?? props.node.id
-    return
-  }
-  if (!activeTabId.value || !children.value.some((c) => c.id === activeTabId.value)) {
+  if (!activeTabId.value || !tabIds.value.has(activeTabId.value)) {
     activeTabId.value = children.value[0]?.id ?? props.node.id
   }
 }
 
 watch(
-  () => [props.node.id, children.value.map((c) => c.id).join(','), nav.activeCategoryId] as const,
-  () => pickDefaultTab(),
+  () => [props.node.id, children.value.map((c) => c.id).join(',')] as const,
+  () => ensureValidTab(),
   { immediate: true },
+)
+
+/**
+ * 侧栏点到子分类时同步 tab。
+ * 点到父级或滚动定位到父级时，落到第一个子分类。
+ */
+watch(
+  () => nav.activeCategoryId,
+  (active, prev) => {
+    if (!hasChildren.value) return
+    if (active && children.value.some((c) => c.id === active)) {
+      activeTabId.value = active
+      return
+    }
+    if (active === props.node.id) {
+      const prevIsChild = Boolean(prev && children.value.some((c) => c.id === prev))
+      if (!prevIsChild) {
+        activeTabId.value = children.value[0]?.id ?? props.node.id
+      }
+    }
+  },
 )
 
 const activeCategory = computed(() => {
@@ -59,7 +78,7 @@ const activeCategory = computed(() => {
 })
 
 const displaySites = computed(() => {
-  const id = activeCategory.value?.id
+  const id = hasChildren.value ? activeTabId.value : props.node.id
   if (!id) return []
   return nav.sitesByCategory.get(id) ?? []
 })
@@ -77,8 +96,7 @@ function scrollActiveTabIntoView(behavior: ScrollBehavior = 'smooth') {
   const overflowRight = tabRect.right > rootRect.right - pad
   if (!overflowLeft && !overflowRight) return
 
-  const target =
-    tab.offsetLeft - (root.clientWidth - tab.offsetWidth) / 2
+  const target = tab.offsetLeft - (root.clientWidth - tab.offsetWidth) / 2
   root.scrollTo({
     left: Math.max(0, target),
     behavior,
@@ -92,13 +110,6 @@ watch(activeTabId, () => {
 function selectTab(id: string) {
   activeTabId.value = id
   nav.activeCategoryId = id
-  void nextTick(() => scrollActiveTabIntoView('smooth'))
-}
-
-function onManageCommand(cmd: string) {
-  if (cmd === 'edit') emit('editCategory', activeCategory.value)
-  if (cmd === 'edit-parent') emit('editCategory', props.node)
-  if (cmd === 'remove') emit('removeCategory', activeCategory.value)
 }
 
 useSortable(
@@ -147,32 +158,6 @@ useSortable(
       <div class="cat-block__heading">
         <NavIcon :icon="node.icon" :size="20" />
         <span class="cat-block__name">{{ node.name }}</span>
-
-        <el-dropdown
-          v-if="nav.editMode"
-          trigger="click"
-          @command="onManageCommand"
-        >
-          <button
-            type="button"
-            class="cat-action"
-            title="管理分类"
-            aria-label="管理分类"
-          >
-            <el-icon :size="15"><MoreFilled /></el-icon>
-          </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="edit" :icon="Edit">编辑当前分类</el-dropdown-item>
-              <el-dropdown-item v-if="hasChildren" command="edit-parent" :icon="Edit">
-                编辑父分类
-              </el-dropdown-item>
-              <el-dropdown-item command="remove" :icon="Delete" divided>
-                删除当前分类
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
       </div>
 
       <div
@@ -182,16 +167,16 @@ useSortable(
         :class="{ 'is-sortable': canReorder }"
       >
         <button
-          v-for="child in children"
-          :id="`category-${child.id}`"
-          :key="child.id"
+          v-for="tab in tabs"
+          :id="`category-${tab.id}`"
+          :key="tab.id"
           type="button"
           class="cat-tab"
-          :data-id="child.id"
-          :class="{ active: activeTabId === child.id }"
-          @click="selectTab(child.id)"
+          :class="{ active: activeTabId === tab.id }"
+          :data-id="tab.id"
+          @click="selectTab(tab.id)"
         >
-          {{ child.name }}
+          {{ tab.name }}
         </button>
       </div>
     </div>
@@ -252,40 +237,16 @@ useSortable(
   margin-right: 2px;
 }
 
-.cat-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--nn-item-radius);
-  background: transparent;
-  color: var(--el-text-color-secondary);
-  cursor: pointer;
-  transition:
-    color var(--nn-transition-fast),
-    background var(--nn-transition-fast);
-
-  &:hover,
-  &:focus-visible {
-    color: var(--nn-primary);
-    background: var(--nn-item-hover-bg, var(--nn-tab-bg));
-  }
-}
-
 .cat-tabs {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
-  padding: 3px;
-  border-radius: 7px;
+  padding: 2px;
+  border-radius: 6px;
   background: var(--nn-tab-bg, #eef0f3);
   box-sizing: border-box;
 }
@@ -302,16 +263,16 @@ useSortable(
   border: 0;
   background: transparent;
   color: var(--el-text-color-secondary);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.2;
-  padding: 6px 12px;
+  padding: 4px 8px;
   margin: 0;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   transition:
     background var(--nn-transition-fast),
     color var(--nn-transition-fast);
@@ -368,7 +329,6 @@ useSortable(
   .cat-tab {
     flex-shrink: 0;
     scroll-snap-align: center;
-    /* 扩大可点区域，避免贴边时点不到 */
     position: relative;
 
     &::after {

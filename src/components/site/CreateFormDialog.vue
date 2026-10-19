@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Link, Close } from '@element-plus/icons-vue'
+import { Link, Close, Loading } from '@element-plus/icons-vue'
 import type { Category } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
+import { useAutoPageMeta } from '@/composables/useAutoPageMeta'
+import {
+  defaultSiteCategoryId,
+  resolveSiteCategoryId,
+} from '@/utils/category-select'
 import IconPicker from '@/components/site/IconPicker.vue'
+import CategoryTreeSelect from '@/components/site/CategoryTreeSelect.vue'
 import NavIcon from '@/components/common/NavIcon.vue'
 
 export type CreateTab = 'site' | 'category'
@@ -40,6 +46,23 @@ const categoryForm = reactive({
   parentId: null as string | null,
 })
 
+const {
+  fetchingMeta,
+  markTitleTouched,
+  markDescriptionTouched,
+  markIconTouched,
+  runHydrate,
+  scheduleFetch,
+  fetchNow,
+} = useAutoPageMeta({
+  form: siteForm,
+  urlProtocol,
+  getUrlHost: () => siteForm.url,
+  setUrlHost: (hostPath) => {
+    siteForm.url = hostPath
+  },
+})
+
 const visible = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
@@ -47,21 +70,25 @@ const visible = computed({
 
 const dialogHint = computed(() =>
   activeTab.value === 'site'
-    ? '填写站点信息，保存到本地导航'
+    ? '粘贴链接后自动识别标题与简介'
     : '创建分类以组织你的网址',
 )
 
 const parentOptions = computed(() => nav.rootCategories)
 
 function resetSiteForm() {
-  siteForm.title = ''
-  siteForm.url = ''
-  siteForm.description = ''
-  siteForm.categoryId =
-    props.preferCategoryId ?? props.categories[0]?.id ?? ''
-  siteForm.icon = ''
-  siteForm.tags = ''
-  urlProtocol.value = 'https://'
+  runHydrate(() => {
+    siteForm.title = ''
+    siteForm.url = ''
+    siteForm.description = ''
+    siteForm.categoryId = defaultSiteCategoryId(
+      props.categories,
+      props.preferCategoryId,
+    )
+    siteForm.icon = ''
+    siteForm.tags = ''
+    urlProtocol.value = 'https://'
+  })
 }
 
 function resetCategoryForm() {
@@ -77,9 +104,12 @@ watch(
     activeTab.value = props.initialTab === 'category' ? 'category' : 'site'
     resetSiteForm()
     resetCategoryForm()
-    // preferCategoryId 可能在 open 后才写入，再同步一次
+    // preferCategoryId 可能在 open 后才写入，再同步一次（有子分类时落到子级）
     if (props.preferCategoryId) {
-      siteForm.categoryId = props.preferCategoryId
+      siteForm.categoryId = defaultSiteCategoryId(
+        props.categories,
+        props.preferCategoryId,
+      )
     }
   },
 )
@@ -99,17 +129,27 @@ async function submitSite() {
     const url = `${urlProtocol.value}${host}`
     new URL(url)
 
+    const categoryId = resolveSiteCategoryId(
+      siteForm.categoryId,
+      props.categories,
+    )
+    if (!categoryId) {
+      ElMessage.warning('请选择分类')
+      return
+    }
+
     await nav.upsertSite({
       title: siteForm.title.trim(),
       url,
       description: siteForm.description.trim() || undefined,
-      categoryId: siteForm.categoryId,
+      categoryId,
       icon: siteForm.icon.trim() || undefined,
       tags: siteForm.tags
         .split(/[,，]/)
         .map((t) => t.trim())
         .filter(Boolean),
     })
+    nav.activeCategoryId = categoryId
     ElMessage.success('已添加网址')
     visible.value = false
   } catch (e) {
@@ -187,20 +227,13 @@ function submit() {
     <!-- 添加网址 -->
     <div v-show="activeTab === 'site'" class="nn-dlg-body">
       <label class="nn-field-block">
-        <span class="nn-field-label">标题 <em>*</em></span>
-        <div class="nn-field">
-          <input
-            v-model="siteForm.title"
-            class="nn-field__input"
-            type="text"
-            placeholder="例如 GitHub"
-            autocomplete="off"
-          />
-        </div>
-      </label>
-
-      <label class="nn-field-block">
-        <span class="nn-field-label">链接 <em>*</em></span>
+        <span class="nn-field-label">
+          链接 <em>*</em>
+          <span v-if="fetchingMeta" class="meta-fetching">
+            <el-icon class="is-loading" :size="12"><Loading /></el-icon>
+            正在识别…
+          </span>
+        </span>
         <div class="nn-field nn-field--url">
           <el-icon class="nn-field__icon" :size="16"><Link /></el-icon>
           <div class="nn-seg" role="group" aria-label="协议">
@@ -208,7 +241,7 @@ function submit() {
               type="button"
               class="nn-seg__btn"
               :class="{ active: urlProtocol === 'https://' }"
-              @click="urlProtocol = 'https://'"
+              @click="urlProtocol = 'https://'; scheduleFetch(120)"
             >
               Https
             </button>
@@ -216,7 +249,7 @@ function submit() {
               type="button"
               class="nn-seg__btn"
               :class="{ active: urlProtocol === 'http://' }"
-              @click="urlProtocol = 'http://'"
+              @click="urlProtocol = 'http://'; scheduleFetch(120)"
             >
               Http
             </button>
@@ -228,6 +261,22 @@ function submit() {
             placeholder="example.com/path"
             autocomplete="off"
             spellcheck="false"
+            @input="scheduleFetch()"
+            @blur="fetchNow()"
+          />
+        </div>
+      </label>
+
+      <label class="nn-field-block">
+        <span class="nn-field-label">标题 <em>*</em></span>
+        <div class="nn-field">
+          <input
+            v-model="siteForm.title"
+            class="nn-field__input"
+            type="text"
+            placeholder="粘贴链接后自动填写"
+            autocomplete="off"
+            @input="markTitleTouched"
           />
         </div>
       </label>
@@ -235,24 +284,11 @@ function submit() {
       <label class="nn-field-block">
         <span class="nn-field-label">分类 <em>*</em></span>
         <div class="nn-field nn-field--select">
-          <el-select
+          <CategoryTreeSelect
             v-model="siteForm.categoryId"
+            :tree="nav.categoryTree"
             placeholder="选择分类"
-            teleported
-            popper-class="nn-select-popper"
-          >
-            <el-option
-              v-for="cat in categories"
-              :key="cat.id"
-              :label="cat.name"
-              :value="cat.id"
-            >
-              <span class="option-row">
-                <NavIcon :icon="cat.icon" :size="16" />
-                {{ cat.name }}
-              </span>
-            </el-option>
-          </el-select>
+          />
         </div>
       </label>
 
@@ -263,7 +299,8 @@ function submit() {
             v-model="siteForm.description"
             class="nn-field__input nn-field__textarea"
             rows="2"
-            placeholder="一句话介绍这个站点（可选）"
+            placeholder="粘贴链接后自动填写（可改）"
+            @input="markDescriptionTouched"
           />
         </div>
       </label>
@@ -279,6 +316,7 @@ function submit() {
               placeholder="留空自动获取 favicon"
               autocomplete="off"
               spellcheck="false"
+              @input="markIconTouched"
             />
           </div>
         </label>
@@ -387,5 +425,16 @@ function submit() {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.meta-fetching {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nn-primary);
+  font-style: normal;
 }
 </style>

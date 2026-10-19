@@ -1,7 +1,12 @@
 export type ThemeMode = 'light' | 'dark' | 'system'
 
 /** 右侧浮动工具栏按钮 id */
-export type DockButtonId = 'backTop' | 'addSite' | 'sort' | 'theme'
+export type DockButtonId =
+  | 'backTop'
+  | 'addSite'
+  | 'manageCategories'
+  | 'sort'
+  | 'theme'
 
 export type SearchEngine = {
   name: string
@@ -73,6 +78,8 @@ export type AppSettings = {
   dockTheme: boolean
   /** 浮动栏：添加网址 */
   dockAddSite: boolean
+  /** 浮动栏：分类管理 */
+  dockManageCategories: boolean
   /** 浮动栏：排序 */
   dockSort: boolean
   /** 浮动栏：导出 JSON */
