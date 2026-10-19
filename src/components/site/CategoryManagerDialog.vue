@@ -182,6 +182,11 @@ function readClientX(event: Event | null | undefined) {
   return null
 }
 
+/** Sortable 运行时有 originalEvent，官方类型未声明 */
+function eventFromSortable(evt: object) {
+  return (evt as { originalEvent?: Event }).originalEvent
+}
+
 function applyDragDepth(depth: 0 | 1) {
   const item = dragState.item
   if (!item) return
@@ -317,15 +322,15 @@ async function setupSortables() {
       dragState.startDepth = item.dataset.depth === '1' ? 1 : 0
       dragState.depth = dragState.startDepth
       dragState.childIds = dragState.startDepth === 0 ? childIdsOf(id) : []
-      dragState.startX = readClientX(evt.originalEvent) ?? 0
+      dragState.startX = readClientX(eventFromSortable(evt)) ?? 0
     },
     onMove: (evt) => {
-      const x = readClientX(evt.originalEvent)
+      const x = readClientX(eventFromSortable(evt))
       if (x != null) updateDragDepth(x)
       return true
     },
     onEnd: (evt) => {
-      const x = readClientX(evt.originalEvent)
+      const x = readClientX(eventFromSortable(evt))
       if (x != null) updateDragDepth(x)
       const container = listEl.value ?? evt.to
       if (container) onSortEnd(container)

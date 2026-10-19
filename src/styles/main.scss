@@ -61,6 +61,7 @@
   --nn-card-inset: inset 0 0 10px rgba(0, 0, 0, 0.05);
   --nn-card-inset-hover: inset 0 0 12px rgba(0, 0, 0, 0.08);
 
+  --main-shadow: rgba(0, 0, 0, 0.1);
   --nn-sidebar-bg: #ffffff;
   /* 侧栏与内容区一致：实色白底，无磨砂 */
   --nn-sidebar-glass-bg: var(--nn-section-bg);
@@ -122,6 +123,7 @@ html.dark {
   --nn-item-active-bg: #2a2e36;
   --nn-item-hover-bg: #2a2e36;
 
+  --main-shadow: rgba(0, 0, 0, 0.35);
   --nn-sidebar-bg: #1a1c20;
   --nn-sidebar-glass-bg: var(--nn-section-bg);
   --nn-sidebar-glass-border: transparent;

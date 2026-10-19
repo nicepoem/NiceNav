@@ -21,13 +21,17 @@ export function useBrand() {
   const siteArticle = computed(() => nav.settings.siteArticle?.trim() || '')
 
   function applyDocumentBrand() {
-    document.title = siteName.value
+    document.title = 'NiceNav'
+    document
+      .querySelectorAll("link[rel='icon'], link[rel='shortcut icon']")
+      .forEach((el, index) => {
+        if (index > 0) el.remove()
+      })
     const link = ensureFaviconLink()
-    if (favicon.value) {
-      link.href = favicon.value
-    } else {
-      link.href = '/favicon.svg'
-    }
+    link.type = 'image/png'
+    link.sizes = 'any'
+    // 固定使用 public/favicon.png，避免旧的站点 Logo 覆盖标签图标
+    link.href = `/favicon.png?v=2`
   }
 
   function watchBrand() {

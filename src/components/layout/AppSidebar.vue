@@ -414,11 +414,11 @@ async function toggleCollapse() {
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  background-color: var(--nn-section-bg, var(--nn-sidebar-bg));
+  background-color: transparent;
   border: none;
   border-radius: var(--nn-sidebar-radius, 12px);
   -webkit-border-radius: var(--nn-sidebar-radius, 12px);
-  box-shadow: none;
+  box-shadow: 0 5px 15px -5px var(--main-shadow);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-sizing: border-box;
