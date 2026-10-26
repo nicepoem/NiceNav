@@ -68,8 +68,18 @@ function updateDrawerTop() {
   }
 
   const gap = readGapPx()
-  const chrome = document.querySelector('.layout-chrome-wrap')
-  const chromeBottom = chrome?.getBoundingClientRect().bottom ?? gap
+  const headerH =
+    Number.parseFloat(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--nn-header-height')
+        .trim(),
+    ) || 64
+  // 顶栏玻璃条；找不到时退回「页面顶间距 + 顶栏高」
+  const chrome =
+    document.querySelector('.nav-top-nav__chrome') ??
+    document.querySelector('.block-shell__top-nav')
+  const chromeBottom = chrome?.getBoundingClientRect().bottom ?? gap + headerH
+  // 滚动贴顶时始终与导航栏保留 gap 间距
   const minTop = chromeBottom + gap
 
   const section = resolveAlignSection()
