@@ -9,16 +9,10 @@ import {
   defaultSiteCategoryId,
   resolveSiteCategoryId,
 } from '@/utils/category-select'
-import IconPicker from '@/components/site/IconPicker.vue'
 import CategoryTreeSelect from '@/components/site/CategoryTreeSelect.vue'
-import NavIcon from '@/components/common/NavIcon.vue'
-
-export type CreateTab = 'site' | 'category'
 
 const props = defineProps<{
   modelValue: boolean
-  /** 打开时默认选中的 tab */
-  initialTab?: CreateTab
   categories: Category[]
   preferCategoryId?: string
 }>()
@@ -28,7 +22,6 @@ const emit = defineEmits<{
 }>()
 
 const nav = useNavStore()
-const activeTab = ref<CreateTab>('site')
 const urlProtocol = ref<'https://' | 'http://'>('https://')
 
 const siteForm = reactive({
@@ -37,13 +30,6 @@ const siteForm = reactive({
   description: '',
   categoryId: '',
   icon: '',
-  tags: '',
-})
-
-const categoryForm = reactive({
-  name: '',
-  icon: '',
-  parentId: null as string | null,
 })
 
 const {
@@ -68,14 +54,6 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const dialogHint = computed(() =>
-  activeTab.value === 'site'
-    ? '粘贴链接后自动识别标题与简介'
-    : '创建分类以组织你的网址',
-)
-
-const parentOptions = computed(() => nav.rootCategories)
-
 function resetSiteForm() {
   runHydrate(() => {
     siteForm.title = ''
@@ -86,25 +64,15 @@ function resetSiteForm() {
       props.preferCategoryId,
     )
     siteForm.icon = ''
-    siteForm.tags = ''
     urlProtocol.value = 'https://'
   })
 }
 
-function resetCategoryForm() {
-  categoryForm.name = ''
-  categoryForm.icon = ''
-  categoryForm.parentId = null
-}
-
 watch(
-  () => [props.modelValue, props.initialTab, props.preferCategoryId] as const,
+  () => [props.modelValue, props.preferCategoryId] as const,
   ([open]) => {
     if (!open) return
-    activeTab.value = props.initialTab === 'category' ? 'category' : 'site'
     resetSiteForm()
-    resetCategoryForm()
-    // preferCategoryId 可能在 open 后才写入，再同步一次（有子分类时落到子级）
     if (props.preferCategoryId) {
       siteForm.categoryId = defaultSiteCategoryId(
         props.categories,
@@ -114,10 +82,9 @@ watch(
   },
 )
 
-async function submitSite() {
+async function submit() {
   if (!props.categories.length) {
-    ElMessage.warning('请先添加一个分类')
-    activeTab.value = 'category'
+    ElMessage.warning('请先添加一个分类（可在分类管理中创建）')
     return
   }
   if (!siteForm.title.trim() || !siteForm.url.trim() || !siteForm.categoryId) {
@@ -144,10 +111,7 @@ async function submitSite() {
       description: siteForm.description.trim() || undefined,
       categoryId,
       icon: siteForm.icon.trim() || undefined,
-      tags: siteForm.tags
-        .split(/[,，]/)
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: [],
     })
     nav.activeCategoryId = categoryId
     ElMessage.success('已添加网址')
@@ -156,31 +120,12 @@ async function submitSite() {
     ElMessage.error(e instanceof Error ? e.message : '保存失败')
   }
 }
-
-async function submitCategory() {
-  if (!categoryForm.name.trim()) {
-    ElMessage.warning('请填写分类名称')
-    return
-  }
-  await nav.upsertCategory({
-    name: categoryForm.name.trim(),
-    icon: categoryForm.icon.trim() || undefined,
-    parentId: categoryForm.parentId,
-  })
-  ElMessage.success('分类已添加')
-  visible.value = false
-}
-
-function submit() {
-  if (activeTab.value === 'site') void submitSite()
-  else void submitCategory()
-}
 </script>
 
 <template>
   <el-dialog
     v-model="visible"
-    width="560px"
+    width="520px"
     align-center
     destroy-on-close
     class="nn-dialog"
@@ -188,31 +133,7 @@ function submit() {
   >
     <template #header>
       <div class="nn-dlg-head">
-        <div class="create-head">
-          <div class="nn-seg create-tabs" role="tablist" aria-label="添加类型">
-            <button
-              type="button"
-              role="tab"
-              class="nn-seg__btn"
-              :class="{ active: activeTab === 'site' }"
-              :aria-selected="activeTab === 'site'"
-              @click="activeTab = 'site'"
-            >
-              添加网址
-            </button>
-            <button
-              type="button"
-              role="tab"
-              class="nn-seg__btn"
-              :class="{ active: activeTab === 'category' }"
-              :aria-selected="activeTab === 'category'"
-              @click="activeTab = 'category'"
-            >
-              添加分类
-            </button>
-          </div>
-          <p class="nn-dlg-head__hint">{{ dialogHint }}</p>
-        </div>
+        <h2 class="nn-dlg-head__title">添加网址</h2>
         <button
           type="button"
           class="nn-dlg-head__close"
@@ -224,14 +145,13 @@ function submit() {
       </div>
     </template>
 
-    <!-- 添加网址 -->
-    <div v-show="activeTab === 'site'" class="nn-dlg-body">
+    <div class="nn-dlg-body">
       <label class="nn-field-block">
         <span class="nn-field-label">
           链接 <em>*</em>
           <span v-if="fetchingMeta" class="meta-fetching">
             <el-icon class="is-loading" :size="12"><Loading /></el-icon>
-            正在识别…
+            识别中…
           </span>
         </span>
         <div class="nn-field nn-field--url">
@@ -274,7 +194,7 @@ function submit() {
             v-model="siteForm.title"
             class="nn-field__input"
             type="text"
-            placeholder="粘贴链接后自动填写"
+            placeholder="网站标题"
             autocomplete="off"
             @input="markTitleTouched"
           />
@@ -298,88 +218,27 @@ function submit() {
           <textarea
             v-model="siteForm.description"
             class="nn-field__input nn-field__textarea"
-            rows="2"
-            placeholder="粘贴链接后自动填写（可改）"
+            rows="3"
+            placeholder="可选"
             @input="markDescriptionTouched"
           />
         </div>
       </label>
 
-      <div class="dlg-row">
-        <label class="nn-field-block">
-          <span class="nn-field-label">图标 URL</span>
-          <div class="nn-field">
-            <input
-              v-model="siteForm.icon"
-              class="nn-field__input"
-              type="url"
-              placeholder="留空自动获取 favicon"
-              autocomplete="off"
-              spellcheck="false"
-              @input="markIconTouched"
-            />
-          </div>
-        </label>
-
-        <label class="nn-field-block">
-          <span class="nn-field-label">标签</span>
-          <div class="nn-field">
-            <input
-              v-model="siteForm.tags"
-              class="nn-field__input"
-              type="text"
-              placeholder="逗号分隔"
-              autocomplete="off"
-            />
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <!-- 添加分类 -->
-    <div v-show="activeTab === 'category'" class="nn-dlg-body">
       <label class="nn-field-block">
-        <span class="nn-field-label">名称 <em>*</em></span>
+        <span class="nn-field-label">图标</span>
         <div class="nn-field">
           <input
-            v-model="categoryForm.name"
+            v-model="siteForm.icon"
             class="nn-field__input"
-            type="text"
-            placeholder="例如 在线配色"
+            type="url"
+            placeholder="留空自动获取"
             autocomplete="off"
+            spellcheck="false"
+            @input="markIconTouched"
           />
         </div>
       </label>
-
-      <label class="nn-field-block">
-        <span class="nn-field-label">上级分类</span>
-        <div class="nn-field nn-field--select">
-          <el-select
-            v-model="categoryForm.parentId"
-            clearable
-            placeholder="不选则为一级分类"
-            teleported
-            popper-class="nn-select-popper"
-          >
-            <el-option
-              v-for="cat in parentOptions"
-              :key="cat.id"
-              :label="cat.name"
-              :value="cat.id"
-            >
-              <span class="option-row">
-                <NavIcon :icon="cat.icon" :size="16" />
-                {{ cat.name }}
-              </span>
-            </el-option>
-          </el-select>
-        </div>
-      </label>
-
-      <div class="nn-field-block">
-        <span class="nn-field-label">图标</span>
-        <IconPicker v-model="categoryForm.icon" />
-      </div>
     </div>
 
     <template #footer>
@@ -388,7 +247,7 @@ function submit() {
           取消
         </button>
         <button type="button" class="nn-btn nn-btn--primary" @click="submit">
-          {{ activeTab === 'site' ? '添加网址' : '添加分类' }}
+          添加
         </button>
       </div>
     </template>
@@ -396,35 +255,8 @@ function submit() {
 </template>
 
 <style scoped lang="scss">
-.create-head {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.create-tabs {
-  align-self: flex-start;
-}
-
 .nn-field--url {
   padding-right: 6px;
-}
-
-.dlg-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 12px;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.option-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .meta-fetching {

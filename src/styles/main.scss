@@ -3,16 +3,16 @@
   --el-border-radius-base: 8px;
   --el-border-radius-small: 6px;
   --el-border-radius-round: 20px;
-  --nn-primary: #f1404b;
-  --nn-primary-rgb: 241, 64, 75;
-  --el-color-primary: #f1404b;
-  --el-color-primary-rgb: 241, 64, 75;
-  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #fff);
-  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #fff);
-  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #fff);
-  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #fff);
-  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #fff);
-  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 80%, #000);
+  --nn-primary: #1e80ff;
+  --nn-primary-rgb: 30, 128, 255;
+  --el-color-primary: #1e80ff;
+  --el-color-primary-rgb: 30, 128, 255;
+  --el-color-primary-light-3: color-mix(in srgb, #1e80ff 70%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, #1e80ff 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, #1e80ff 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, #1e80ff 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, #1e80ff 10%, #fff);
+  --el-color-primary-dark-2: color-mix(in srgb, #1e80ff 80%, #000);
 
   /* 展开侧栏：紧凑宽度 */
   --nn-sidebar-width: 120px;
@@ -75,18 +75,27 @@
   --nn-sidebar-text-active: var(--nn-primary);
   --nn-menu-hover-bg: rgba(0, 0, 0, 0.05);
 
-  --nn-header-bg: #ffffff;
-  /* 顶栏磨砂玻璃 */
-  --nn-header-glass-bg: rgba(255, 255, 255, 0.25);
-  --nn-header-glass-border: rgba(255, 255, 255, 0.18);
-  --nn-header-blur: 6px;
-  --nn-header-shadow: rgba(142, 142, 142, 0.19) 0px 6px 15px 0px;
-  --nn-header-radius: 12px;
+  --nn-header-bg: var(--nn-sidebar-bg);
+  /* 顶栏与侧栏同色实底，无透明 */
+  --nn-header-glass-bg: var(--nn-sidebar-glass-bg);
+  --nn-header-glass-border: var(--nn-sidebar-glass-border);
+  --nn-header-blur: 0px;
+  --nn-header-shadow: var(--nn-panel-shadow);
+  --nn-header-radius: var(--nn-sidebar-radius);
 
   --nn-page-bg: #f2f4f7;
+  /* 点格背景 */
+  --nn-page-dot: rgba(15, 23, 42, 0.14);
+  --nn-page-dot-size: 18px;
+  --nn-page-pattern: radial-gradient(
+    circle at center,
+    var(--nn-page-dot) 1px,
+    transparent 1.2px
+  );
   --nn-section-bg: #ffffff;
   --nn-surface-bg: transparent;
-  /* 网址卡片：更浅的灰 + 内嵌阴影 */
+  /* 网址卡片：白底，透出页面点格 */
+  /* 网址卡片：浅灰底 + 内嵌阴影 */
   --nn-card-bg: #f5f6f8;
   --nn-card-bg-hover: #eef0f4;
   --nn-tab-bg: #eef0f3;
@@ -102,17 +111,17 @@
 }
 
 html.dark {
-  /* 覆盖 Element Plus dark css-vars 默认蓝主色 */
-  --nn-primary: #f1404b;
-  --nn-primary-rgb: 241, 64, 75;
-  --el-color-primary: #f1404b;
-  --el-color-primary-rgb: 241, 64, 75;
-  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #1a1c20);
-  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #1a1c20);
-  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #1a1c20);
-  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #1a1c20);
-  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #1a1c20);
-  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 75%, #fff);
+  /* 暗色主题主色 */
+  --nn-primary: #1e80ff;
+  --nn-primary-rgb: 30, 128, 255;
+  --el-color-primary: #1e80ff;
+  --el-color-primary-rgb: 30, 128, 255;
+  --el-color-primary-light-3: color-mix(in srgb, #1e80ff 70%, #1a1c20);
+  --el-color-primary-light-5: color-mix(in srgb, #1e80ff 50%, #1a1c20);
+  --el-color-primary-light-7: color-mix(in srgb, #1e80ff 30%, #1a1c20);
+  --el-color-primary-light-8: color-mix(in srgb, #1e80ff 20%, #1a1c20);
+  --el-color-primary-light-9: color-mix(in srgb, #1e80ff 10%, #1a1c20);
+  --el-color-primary-dark-2: color-mix(in srgb, #1e80ff 75%, #fff);
 
   /* —— 黑夜 —— */
   --nn-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -133,17 +142,23 @@ html.dark {
   --nn-sidebar-logo-bg: #1a1c20;
   --nn-sidebar-logo-text: #ffffff;
   --nn-sidebar-text: rgba(255, 255, 255, 0.78);
-  --nn-sidebar-text-active: #f1404b;
+  --nn-sidebar-text-active: #1e80ff;
   --nn-menu-hover-bg: rgba(255, 255, 255, 0.08);
 
-  --nn-header-bg: #1a1c20;
-  --nn-header-glass-bg: rgba(255, 255, 255, 0.08);
-  --nn-header-glass-border: rgba(255, 255, 255, 0.18);
-  --nn-header-blur: 6px;
-  --nn-header-shadow: rgba(0, 0, 0, 0.28) 0px 6px 15px 0px;
-  --nn-header-radius: 12px;
+  --nn-header-bg: var(--nn-sidebar-bg);
+  --nn-header-glass-bg: var(--nn-sidebar-glass-bg);
+  --nn-header-glass-border: var(--nn-sidebar-glass-border);
+  --nn-header-blur: 0px;
+  --nn-header-shadow: var(--nn-panel-shadow);
+  --nn-header-radius: var(--nn-sidebar-radius);
 
   --nn-page-bg: #0f1115;
+  --nn-page-dot: rgba(255, 255, 255, 0.1);
+  --nn-page-pattern: radial-gradient(
+    circle at center,
+    var(--nn-page-dot) 1px,
+    transparent 1.2px
+  );
   --nn-section-bg: #1a1c20;
   --nn-surface-bg: transparent;
   --nn-card-bg: #22252b;
@@ -174,6 +189,9 @@ body {
   font-family: var(--el-font-family);
   color: var(--el-text-color-primary);
   background-color: var(--nn-page-bg);
+  background-image: var(--nn-page-pattern);
+  background-size: var(--nn-page-dot-size) var(--nn-page-dot-size);
+  background-attachment: fixed;
   font-size: var(--el-font-size-base);
   transition:
     background-color var(--nn-transition-slow),
@@ -359,6 +377,171 @@ body::-webkit-scrollbar-corner,
 .el-upload-dragger {
   border: none !important;
   box-shadow: var(--nn-shadow) !important;
+}
+
+/* 嵌套在业务弹窗上时，确认框需更高层且居中 */
+.el-overlay.is-message-box {
+  z-index: 5000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.el-overlay.is-message-box .el-overlay-message-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  position: static !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+.el-message-box,
+.nn-message-box.el-message-box {
+  --nn-msgbox-radius: 16px;
+  width: min(400px, calc(100vw - 32px)) !important;
+  max-width: min(400px, calc(100vw - 32px)) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: var(--nn-msgbox-radius) !important;
+  background: var(--nn-section-bg) !important;
+  box-shadow: 0 16px 48px rgba(15, 40, 80, 0.18) !important;
+  overflow: hidden;
+}
+
+.nn-message-box.el-message-box {
+  .el-message-box__header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 18px 20px 0 !important;
+    position: relative !important;
+  }
+
+  .el-message-box__title {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    font-size: 17px !important;
+    font-weight: 750 !important;
+    letter-spacing: -0.02em;
+    line-height: 32px !important;
+    height: 32px !important;
+    color: var(--el-text-color-primary) !important;
+  }
+
+  .el-message-box__headerbtn {
+    position: static !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+    flex-shrink: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    border-radius: 10px !important;
+    background: var(--nn-tab-bg) !important;
+    display: grid !important;
+    place-items: center !important;
+
+    .el-message-box__close {
+      color: var(--el-text-color-secondary) !important;
+    }
+
+    &:hover {
+      background: var(--nn-item-hover-bg) !important;
+
+      .el-message-box__close {
+        color: var(--nn-primary) !important;
+      }
+    }
+  }
+
+  .el-message-box__content {
+    padding: 16px 20px 8px !important;
+    color: var(--el-text-color-regular) !important;
+  }
+
+  .el-message-box__container {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .el-message-box__status {
+    position: static !important;
+    transform: none !important;
+    flex-shrink: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 22px !important;
+    margin: 1px 0 0 !important;
+    line-height: 1 !important;
+  }
+
+  .el-message-box__message {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    p {
+      margin: 0 !important;
+      font-size: 14px !important;
+      line-height: 1.55 !important;
+      color: var(--el-text-color-regular) !important;
+      word-break: break-word;
+    }
+
+    strong,
+    .nn-msg-name {
+      color: var(--el-text-color-primary);
+      font-weight: 700;
+    }
+  }
+
+  .el-message-box__btns {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    padding: 16px 20px 20px !important;
+  }
+
+  .el-message-box__btns .el-button {
+    margin: 0 !important;
+    min-width: 76px;
+    height: 36px !important;
+    padding: 0 16px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    box-shadow: none !important;
+  }
+
+  .el-message-box__btns .el-button--default {
+    background: var(--nn-tab-bg) !important;
+    color: var(--el-text-color-regular) !important;
+
+    &:hover {
+      color: var(--nn-primary) !important;
+      background: var(--nn-item-hover-bg) !important;
+    }
+  }
+
+  .el-message-box__btns .el-button--primary,
+  .el-message-box__btns .el-button--danger {
+    background: #f56c6c !important;
+    color: #fff !important;
+
+    &:hover {
+      filter: brightness(1.05);
+    }
+  }
 }
 
 .el-card.is-hover-shadow:hover,

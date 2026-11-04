@@ -77,6 +77,7 @@ function updateDrawerTop() {
   // 顶栏玻璃条；找不到时退回「页面顶间距 + 顶栏高」
   const chrome =
     document.querySelector('.nav-top-nav__chrome') ??
+    document.querySelector('.nav-top-nav') ??
     document.querySelector('.block-shell__top-nav')
   const chromeBottom = chrome?.getBoundingClientRect().bottom ?? gap + headerH
   // 滚动贴顶时始终与导航栏保留 gap 间距
@@ -424,11 +425,11 @@ async function toggleCollapse() {
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  background-color: transparent;
+  background-color: var(--nn-sidebar-glass-bg, var(--nn-section-bg, #fff));
   border: none;
   border-radius: var(--nn-sidebar-radius, 12px);
   -webkit-border-radius: var(--nn-sidebar-radius, 12px);
-  box-shadow: 0 5px 15px -5px var(--main-shadow);
+  box-shadow: var(--nn-panel-shadow, 0 2px 10px rgba(0, 21, 41, 0.08));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-sizing: border-box;

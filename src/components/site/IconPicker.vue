@@ -6,6 +6,11 @@ import { CATEGORY_ICON_OPTIONS, isIconifyName } from '@/constants/category-icons
 
 const model = defineModel<string>({ default: '' })
 
+const { compact = false } = defineProps<{
+  /** 工具栏等窄位：只显示图标按钮 */
+  compact?: boolean
+}>()
+
 const dialogOpen = ref(false)
 const keyword = ref('')
 
@@ -44,30 +49,30 @@ function clear() {
 </script>
 
 <template>
-  <div class="icon-picker">
+  <div class="icon-picker" :class="{ 'is-compact': compact }">
     <div class="icon-picker__trigger-row">
       <button
         type="button"
         class="icon-picker__trigger"
-        title="选择图标"
+        :title="compact ? selectedLabel : '选择图标'"
         @click="openDialog"
       >
         <span class="preview-box">
           <Icon
             v-if="isIconifyName(model)"
             :icon="model"
-            width="26"
-            height="26"
+            :width="compact ? 20 : 26"
+            :height="compact ? 20 : 26"
           />
           <span v-else-if="model" class="preview-emoji">{{ model }}</span>
-          <span v-else class="preview-empty">图标</span>
+          <span v-else class="preview-empty">{{ compact ? '+' : '图标' }}</span>
         </span>
-        <span class="preview-meta">
+        <span v-if="!compact" class="preview-meta">
           <span class="preview-name">{{ selectedLabel }}</span>
           <span class="preview-hint">点击打开图标列表</span>
         </span>
       </button>
-      <el-button v-if="model" link type="primary" @click="clear">清除</el-button>
+      <el-button v-if="model && !compact" link type="primary" @click="clear">清除</el-button>
     </div>
 
     <el-dialog
@@ -142,6 +147,42 @@ function clear() {
 <style scoped lang="scss">
 .icon-picker {
   width: 100%;
+
+  &.is-compact {
+    width: auto;
+    flex-shrink: 0;
+
+    .icon-picker__trigger {
+      flex: none;
+      padding: 0;
+      background: transparent;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+
+    .preview-box {
+      width: 36px;
+      height: 36px;
+      box-shadow: none;
+      background: var(--nn-tab-bg, #eef0f3);
+
+      &:hover {
+        background: var(--nn-item-hover-bg);
+      }
+    }
+
+    .preview-empty {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .preview-emoji {
+      font-size: 18px;
+    }
+  }
 }
 
 .icon-picker__trigger-row {

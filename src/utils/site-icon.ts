@@ -20,6 +20,7 @@ type QueueItem = {
   id: string
   siteUrl: string
   priority: number
+  thirdParty: boolean
   persist: (iconUrl: string) => void | Promise<void>
   onFail?: () => void
 }
@@ -98,10 +99,9 @@ function flushToDisk() {
   }
 }
 
-/** 启动时加载持久化缓存，并预连接国内图标源 */
+/** 启动时加载持久化缓存（第三方 preconnect 仅在开启对应设置后调用） */
 export function initSiteIconCache() {
   hydrateFromDisk()
-  preconnectIconOrigins()
 }
 
 function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
@@ -147,7 +147,7 @@ async function probeInOrder(urls: string[]): Promise<string> {
   throw lastError ?? new Error('all failed')
 }
 
-async function resolveAutoIcon(siteUrl: string): Promise<string> {
+async function resolveAutoIcon(siteUrl: string, thirdParty = false): Promise<string> {
   hydrateFromDisk()
   const host = siteHostname(siteUrl)
   if (host) {
@@ -155,7 +155,7 @@ async function resolveAutoIcon(siteUrl: string): Promise<string> {
     if (cached) return cached
   }
 
-  const winner = await probeInOrder(faviconCandidates(siteUrl))
+  const winner = await probeInOrder(faviconCandidates(siteUrl, { thirdParty }))
   if (host) setCachedUrl(host, winner)
   return winner
 }
@@ -174,7 +174,7 @@ async function runOne(item: QueueItem) {
   running.add(item.id)
   active += 1
   try {
-    const ok = await resolveAutoIcon(item.siteUrl)
+    const ok = await resolveAutoIcon(item.siteUrl, item.thirdParty)
     await item.persist(ok)
   } catch {
     failed.add(item.id)
@@ -196,7 +196,7 @@ function pump() {
 
 /**
  * 入队自动图标加载。priority 越小越优先（建议用页面纵向位置）。
- * 策略：持久化域名缓存 → 国内源串行 → 写入站点与缓存。
+ * 策略：持久化域名缓存 → 站点自身 favicon（可选第三方 CDN）→ 写入站点与缓存。
  */
 export function enqueueSiteIcon(options: {
   site: Site
@@ -205,9 +205,11 @@ export function enqueueSiteIcon(options: {
   onFail?: () => void
   /** 允许对曾失败的 id 再试一次（例如落库地址失效后） */
   retry?: boolean
+  /** 是否探测第三方 favicon CDN，默认 false */
+  thirdParty?: boolean
 }) {
   hydrateFromDisk()
-  const { site, priority, persist, onFail, retry } = options
+  const { site, priority, persist, onFail, retry, thirdParty = false } = options
   if (site.icon?.trim()) return
   if (retry) failed.delete(site.id)
   if (failed.has(site.id) || running.has(site.id)) {
@@ -231,6 +233,7 @@ export function enqueueSiteIcon(options: {
     existing.priority = Math.min(existing.priority, priority)
     existing.persist = persist
     existing.onFail = onFail
+    existing.thirdParty = thirdParty
     pump()
     return
   }
@@ -239,6 +242,7 @@ export function enqueueSiteIcon(options: {
     id: site.id,
     siteUrl: site.url,
     priority,
+    thirdParty,
     persist,
     onFail,
   })

@@ -1,5 +1,6 @@
 import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import { fetchPageMeta, normalizeSiteUrl, type PageMeta } from '@/utils/page-meta'
+import { useNavStore } from '@/stores/nav'
 
 type MetaForm = {
   title: string
@@ -18,6 +19,7 @@ export function useAutoPageMeta(options: {
   /** 规范化后写回链接输入框（去掉协议前缀） */
   setUrlHost?: (hostPath: string) => void
 }) {
+  const nav = useNavStore()
   const fetchingMeta = ref(false)
   const titleTouched = ref(false)
   const descriptionTouched = ref(false)
@@ -99,7 +101,9 @@ export function useAutoPageMeta(options: {
     const id = ++requestId
     fetchingMeta.value = true
     try {
-      const meta = await fetchPageMeta(url)
+      const meta = await fetchPageMeta(url, {
+        allowThirdParty: nav.settings.allowThirdPartyMeta === true,
+      })
       if (id !== requestId) return
       applyMeta(meta)
     } finally {

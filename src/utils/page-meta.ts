@@ -1,3 +1,5 @@
+import { cleanHtmlText, parseHtmlMeta as parseSharedHtmlMeta } from '@/core/html-meta'
+
 export type PageMeta = {
   title: string
   description: string
@@ -13,103 +15,23 @@ type ChromeRuntime = {
   lastError?: { message?: string }
 }
 
+type ChromePermissions = {
+  contains: (perm: { origins: string[] }) => Promise<boolean>
+  request: (perm: { origins: string[] }) => Promise<boolean>
+}
+
 declare global {
   interface Window {
-    chrome?: { runtime?: ChromeRuntime }
+    chrome?: {
+      runtime?: ChromeRuntime
+      permissions?: ChromePermissions
+    }
   }
-}
-
-function decodeEntities(input: string): string {
-  return input
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
-}
-
-function cleanText(value: string | null | undefined, max = 240): string {
-  if (!value) return ''
-  const text = decodeEntities(value)
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (text.length <= max) return text
-  return `${text.slice(0, max - 1).trim()}…`
-}
-
-function absUrl(base: string, maybeRelative: string | null | undefined): string {
-  if (!maybeRelative?.trim()) return ''
-  try {
-    return new URL(maybeRelative.trim(), base).href
-  } catch {
-    return ''
-  }
-}
-
-function pickAttr(tag: string, name: string): string {
-  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'))
-  return match?.[2]?.trim() ?? ''
-}
-
-function pickMetaContent(html: string, key: string): string {
-  const tags = html.match(/<meta\b[^>]*>/gi) ?? []
-  const wanted = key.toLowerCase()
-  for (const tag of tags) {
-    const name = (pickAttr(tag, 'name') || pickAttr(tag, 'property')).toLowerCase()
-    if (name !== wanted) continue
-    const content = pickAttr(tag, 'content')
-    if (content) return content
-  }
-  return ''
-}
-
-function pickLinkHref(html: string, rel: string): string {
-  const tags = html.match(/<link\b[^>]*>/gi) ?? []
-  const wanted = rel.toLowerCase()
-  for (const tag of tags) {
-    const relValue = pickAttr(tag, 'rel').toLowerCase()
-    if (!relValue.split(/\s+/).includes(wanted) && !relValue.includes(wanted)) continue
-    const href = pickAttr(tag, 'href')
-    if (href) return href
-  }
-  return ''
-}
-
-function pickBodyText(html: string): string {
-  const withoutNoise = html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
-    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, ' ')
-  const body = withoutNoise.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? withoutNoise
-  return cleanText(body.replace(/<[^>]+>/g, ' '), 180)
 }
 
 /** 从 HTML 抽取标题 / 简介 / 图标 */
 export function parseHtmlMeta(html: string, pageUrl: string): PageMeta {
-  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
-  const title =
-    cleanText(pickMetaContent(html, 'og:title')) ||
-    cleanText(pickMetaContent(html, 'twitter:title')) ||
-    cleanText(titleMatch?.[1] ?? '')
-
-  const description =
-    cleanText(pickMetaContent(html, 'description'), 320) ||
-    cleanText(pickMetaContent(html, 'og:description'), 320) ||
-    cleanText(pickMetaContent(html, 'twitter:description'), 320) ||
-    pickBodyText(html)
-
-  const icon =
-    absUrl(pageUrl, pickLinkHref(html, 'apple-touch-icon')) ||
-    absUrl(pageUrl, pickLinkHref(html, 'icon')) ||
-    absUrl(pageUrl, pickMetaContent(html, 'og:image')) ||
-    ''
-
-  return { title, description, icon }
+  return parseSharedHtmlMeta(html, pageUrl)
 }
 
 export function normalizeSiteUrl(
@@ -119,7 +41,6 @@ export function normalizeSiteUrl(
   let host = rawHostPath.trim().replace(/[\u200b\u00a0]/g, '')
   if (!host) return null
 
-  // 粘贴完整链接时同步识别协议
   let proto = protocol
   if (/^https:\/\//i.test(host)) {
     proto = 'https://'
@@ -135,7 +56,6 @@ export function normalizeSiteUrl(
   try {
     const url = new URL(`${proto}${host}`)
     if (!url.hostname) return null
-    // 允许 example.com / localhost:5173 / IP
     const hostOk =
       url.hostname.includes('.') ||
       url.hostname === 'localhost' ||
@@ -166,16 +86,21 @@ function withTimeout<T>(promise: Promise<T | null>, ms: number): Promise<T | nul
 function asMeta(data: Partial<PageMeta> | null | undefined): PageMeta | null {
   if (!data) return null
   const meta: PageMeta = {
-    title: cleanText(data.title ?? ''),
-    description: cleanText(data.description ?? '', 320),
+    title: cleanHtmlText(data.title ?? ''),
+    description: cleanHtmlText(data.description ?? '', 320),
     icon: String(data.icon ?? '').trim(),
   }
   return meta.title || meta.description || meta.icon ? meta : null
 }
 
-async function fetchViaDevProxy(url: string): Promise<PageMeta | null> {
+async function fetchViaDevProxy(
+  url: string,
+  signal?: AbortSignal,
+): Promise<PageMeta | null> {
   if (!import.meta.env.DEV) return null
   const controller = new AbortController()
+  const onAbort = () => controller.abort()
+  signal?.addEventListener('abort', onAbort, { once: true })
   const timer = window.setTimeout(() => controller.abort(), 12000)
   try {
     const res = await fetch(`/api/page-meta?url=${encodeURIComponent(url)}`, {
@@ -187,12 +112,27 @@ async function fetchViaDevProxy(url: string): Promise<PageMeta | null> {
     return null
   } finally {
     window.clearTimeout(timer)
+    signal?.removeEventListener('abort', onAbort)
+  }
+}
+
+async function ensureExtensionOriginPermission(url: string): Promise<boolean> {
+  const permissions = window.chrome?.permissions
+  if (!permissions?.contains || !permissions.request) return true
+  try {
+    const origin = `${new URL(url).origin}/*`
+    if (await permissions.contains({ origins: [origin] })) return true
+    return await permissions.request({ origins: [origin] })
+  } catch {
+    return false
   }
 }
 
 async function fetchViaExtension(url: string): Promise<PageMeta | null> {
   const runtime = window.chrome?.runtime
   if (!runtime?.id) return null
+  const allowed = await ensureExtensionOriginPermission(url)
+  if (!allowed) return null
 
   return new Promise((resolve) => {
     const timer = window.setTimeout(() => resolve(null), 10000)
@@ -217,8 +157,20 @@ async function fetchViaExtension(url: string): Promise<PageMeta | null> {
   })
 }
 
-async function fetchHtmlDirect(url: string): Promise<string | null> {
+function linkAbort(signal: AbortSignal | undefined, local: AbortController) {
+  if (!signal) return () => undefined
+  const onAbort = () => local.abort()
+  if (signal.aborted) local.abort()
+  else signal.addEventListener('abort', onAbort, { once: true })
+  return () => signal.removeEventListener('abort', onAbort)
+}
+
+async function fetchHtmlDirect(
+  url: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
   const controller = new AbortController()
+  const unlink = linkAbort(signal, controller)
   const timer = window.setTimeout(() => controller.abort(), 5000)
   try {
     const res = await fetch(url, {
@@ -236,12 +188,17 @@ async function fetchHtmlDirect(url: string): Promise<string | null> {
     return null
   } finally {
     window.clearTimeout(timer)
+    unlink()
   }
 }
 
-async function fetchViaMicrolink(url: string): Promise<PageMeta | null> {
+async function fetchViaMicrolink(
+  url: string,
+  signal?: AbortSignal,
+): Promise<PageMeta | null> {
   const endpoint = `https://api.microlink.io/?url=${encodeURIComponent(url)}&meta=true`
   const controller = new AbortController()
+  const unlink = linkAbort(signal, controller)
   const timer = window.setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(endpoint, { signal: controller.signal })
@@ -265,13 +222,17 @@ async function fetchViaMicrolink(url: string): Promise<PageMeta | null> {
     return null
   } finally {
     window.clearTimeout(timer)
+    unlink()
   }
 }
 
-/** 浏览器侧 CORS 代理：取 HTML 后再本地解析 */
-async function fetchViaAllOrigins(url: string): Promise<PageMeta | null> {
+async function fetchViaAllOrigins(
+  url: string,
+  signal?: AbortSignal,
+): Promise<PageMeta | null> {
   const endpoint = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
   const controller = new AbortController()
+  const unlink = linkAbort(signal, controller)
   const timer = window.setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(endpoint, { signal: controller.signal })
@@ -283,6 +244,7 @@ async function fetchViaAllOrigins(url: string): Promise<PageMeta | null> {
     return null
   } finally {
     window.clearTimeout(timer)
+    unlink()
   }
 }
 
@@ -295,10 +257,10 @@ function metaScore(meta: PageMeta): number {
   return score
 }
 
-/** 并行抓取，短时间内取分数最高的结果 */
 async function bestMeta(
   tasks: Array<Promise<PageMeta | null>>,
   fallback: PageMeta,
+  abort: AbortController,
   waitMs = 2600,
 ): Promise<PageMeta> {
   return new Promise((resolve) => {
@@ -309,6 +271,7 @@ async function bestMeta(
     const finish = (meta: PageMeta) => {
       if (settled) return
       settled = true
+      abort.abort()
       resolve(meta)
     }
 
@@ -320,7 +283,6 @@ async function bestMeta(
       if (settled) return
       if (meta && metaScore(meta) > 0) {
         if (!best || metaScore(meta) > metaScore(best)) best = meta
-        // 标题+简介都有时立刻采用
         if (meta.title && meta.description) {
           window.clearTimeout(timer)
           finish(meta)
@@ -346,11 +308,18 @@ async function bestMeta(
   })
 }
 
+export type FetchPageMetaOptions = {
+  allowThirdParty?: boolean
+}
+
 /**
  * 输入链接后自动获取标题与简介。
- * 开发代抓 / 扩展后台 / 直连 / 公开接口并行，取最优结果。
+ * 默认：开发代抓 / 扩展后台 / 直连；可选再并行第三方公开接口。
  */
-export async function fetchPageMeta(url: string): Promise<PageMeta> {
+export async function fetchPageMeta(
+  url: string,
+  options?: FetchPageMetaOptions,
+): Promise<PageMeta> {
   const empty: PageMeta = { title: '', description: '', icon: '' }
   let parsed: URL
   try {
@@ -366,17 +335,21 @@ export async function fetchPageMeta(url: string): Promise<PageMeta> {
     icon: '',
   }
 
-  return bestMeta(
-    [
-      fetchViaDevProxy(url),
-      fetchViaExtension(url),
-      withTimeout(
-        fetchHtmlDirect(url).then((html) => (html ? asMeta(parseHtmlMeta(html, url)) : null)),
-        3500,
+  const abort = new AbortController()
+  const signal = abort.signal
+  const tasks: Array<Promise<PageMeta | null>> = [
+    fetchViaDevProxy(url, signal),
+    fetchViaExtension(url),
+    withTimeout(
+      fetchHtmlDirect(url, signal).then((html) =>
+        html ? asMeta(parseHtmlMeta(html, url)) : null,
       ),
-      fetchViaMicrolink(url),
-      fetchViaAllOrigins(url),
-    ],
-    fallback,
-  )
+      3500,
+    ),
+  ]
+  if (options?.allowThirdParty) {
+    tasks.push(fetchViaMicrolink(url, signal), fetchViaAllOrigins(url, signal))
+  }
+
+  return bestMeta(tasks, fallback, abort)
 }

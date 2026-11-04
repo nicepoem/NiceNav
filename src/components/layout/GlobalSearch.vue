@@ -2,12 +2,30 @@
 import { computed, ref, watch } from 'vue'
 import { Search, Close, ArrowDown } from '@element-plus/icons-vue'
 import { useNavStore } from '@/stores/nav'
+import { useSearchHotkey } from '@/composables/useSearchHotkey'
+
+const props = withDefaults(
+  defineProps<{
+    /** 紧凑样式，用于顶栏内嵌 */
+    compact?: boolean
+    /** 是否注册全局快捷键（弹窗外层统一处理时关闭） */
+    enableHotkey?: boolean
+  }>(),
+  { compact: false, enableHotkey: true },
+)
 
 const nav = useNavStore()
 
 /** 站内 -1；外部引擎为 settings 下标 */
 const activeEngine = ref(-1)
 const webQuery = ref('')
+
+useSearchHotkey({
+  enabled: () => props.enableHotkey,
+  clearLocalQuery: () => {
+    webQuery.value = ''
+  },
+})
 
 const engines = computed(() => nav.settings.searchEngines ?? [])
 
@@ -60,10 +78,16 @@ function onSubmit() {
 </script>
 
 <template>
-  <form class="cmd-search" @submit.prevent="onSubmit">
+  <form
+    class="cmd-search"
+    :class="{ 'cmd-search--compact': props.compact }"
+    @submit.prevent="onSubmit"
+  >
     <el-dropdown
       trigger="click"
       placement="bottom-start"
+      teleported
+      :popper-options="{ strategy: 'fixed' }"
       popper-class="nn-search-engine-popper"
       @command="selectEngine"
     >
@@ -88,7 +112,7 @@ function onSubmit() {
       </template>
     </el-dropdown>
 
-    <el-icon class="cmd-search__icon" :size="18"><Search /></el-icon>
+    <el-icon class="cmd-search__icon" :size="props.compact ? 16 : 18"><Search /></el-icon>
 
     <input
       v-model="query"
@@ -129,6 +153,42 @@ function onSubmit() {
     box-shadow:
       var(--nn-card-inset),
       0 0 0 1px color-mix(in srgb, var(--nn-primary) 35%, transparent);
+  }
+
+  &--compact {
+    min-height: 36px;
+    height: 36px;
+    gap: 8px;
+    padding: 2px 4px 2px 6px;
+    border-radius: var(--nn-item-radius);
+    background: var(--nn-tab-bg);
+    box-shadow: none;
+
+    &:focus-within {
+      background: var(--nn-section-bg);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--nn-primary) 35%, transparent);
+    }
+
+    .cmd-search__engine {
+      height: 28px;
+      padding: 0 8px;
+      font-size: 12px;
+      background: var(--nn-section-bg);
+    }
+
+    .cmd-search__icon {
+      font-size: 16px;
+    }
+
+    .cmd-search__input {
+      font-size: 13px;
+    }
+
+    .cmd-search__clear {
+      width: 26px;
+      height: 26px;
+      margin-right: 2px;
+    }
   }
 }
 
@@ -220,6 +280,8 @@ function onSubmit() {
 <style lang="scss">
 .nn-search-engine-popper.el-popper,
 .nn-search-engine-popper {
+  /* 需高于搜索弹窗（4000），否则下拉被遮罩挡住 */
+  z-index: 5200 !important;
   --nn-engine-menu-radius: calc(var(--nn-item-radius) + 4px);
   border-radius: var(--nn-engine-menu-radius) !important;
   background: var(--nn-section-bg, #fff) !important;

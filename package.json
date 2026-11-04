@@ -8,10 +8,14 @@
     "build": "vue-tsc -b && vite build",
     "build:extension": "vue-tsc -b && vite build --config vite.config.extension.ts",
     "preview": "vite preview",
-    "typecheck": "vue-tsc -b --pretty false"
+    "typecheck": "vue-tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@iconify-json/mdi": "^1.2.3",
     "@iconify/vue": "^5.0.3",
     "dexie": "^4.0.11",
     "element-plus": "^2.9.7",
@@ -22,15 +26,21 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.22.0",
     "@types/node": "^24.13.3",
     "@types/sortablejs": "^1.15.9",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/tsconfig": "^0.9.1",
+    "eslint": "^9.22.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "globals": "^16.0.0",
     "sass": "^1.86.0",
     "typescript": "~5.8.0",
+    "typescript-eslint": "^8.26.0",
     "unplugin-auto-import": "^19.1.2",
     "unplugin-vue-components": "^28.4.1",
     "vite": "^6.2.3",
+    "vitest": "^3.0.8",
     "vue-tsc": "^2.2.8"
   }
 }

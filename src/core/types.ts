@@ -6,6 +6,7 @@ export type DockButtonId =
   | 'addSite'
   | 'manageCategories'
   | 'sort'
+  | 'settings'
   | 'theme'
 
 export type SearchEngine = {
@@ -60,16 +61,16 @@ export type AppSettings = {
   openInNewTab: boolean
   searchEngines: SearchEngine[]
   sidebarCollapsed: boolean
-  /** 站点名称，侧栏与页面标题展示 */
-  siteName: string
-  /** 站点副标题 / 口号 */
-  siteSlogan: string
-  /** Logo 图片（data URL 或 http URL） */
-  logo: string
-  /** 浏览器图标 favicon（data URL 或 http URL） */
-  favicon: string
-  /** 站点文章 / 公告正文（纯文本或简易 Markdown） */
-  siteArticle: string
+  /**
+   * 允许第三方服务拉取页面元数据（默认关，本地优先）。
+   * 开启后添加网址时可能请求 Microlink / AllOrigins 等。
+   */
+  allowThirdPartyMeta: boolean
+  /**
+   * 允许第三方 favicon CDN（默认关）。
+   * 关闭时仅探测站点自身 /favicon.ico 等路径。
+   */
+  allowThirdPartyFavicon: boolean
   /** 右侧浮动工具栏总开关 */
   dockEnabled: boolean
   /** 浮动栏：返回顶部 */
@@ -82,10 +83,6 @@ export type AppSettings = {
   dockManageCategories: boolean
   /** 浮动栏：排序 */
   dockSort: boolean
-  /** 浮动栏：导出 JSON */
-  dockExport: boolean
-  /** 浮动栏：导入 JSON */
-  dockImport: boolean
   /** 浮动栏按钮顺序（上→下） */
   dockOrder: DockButtonId[]
   /** 顶栏自定义导航菜单 */

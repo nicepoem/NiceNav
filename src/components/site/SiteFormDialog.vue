@@ -31,7 +31,6 @@ const form = reactive({
   description: '',
   categoryId: '',
   icon: '',
-  tags: '',
 })
 
 const {
@@ -93,7 +92,6 @@ watch(
         ? resolveSiteCategoryId(site.categoryId, props.categories)
         : defaultSiteCategoryId(props.categories, props.preferCategoryId)
       form.icon = site?.icon ?? ''
-      form.tags = site?.tags?.join(', ') ?? ''
     })
   },
 )
@@ -121,10 +119,7 @@ async function submit() {
       description: form.description.trim() || undefined,
       categoryId,
       icon: form.icon.trim() || undefined,
-      tags: form.tags
-        .split(/[,，]/)
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: props.site?.tags ?? [],
     })
     nav.activeCategoryId = categoryId
     ElMessage.success(isEdit.value ? '已更新网址' : '已添加网址')
@@ -170,6 +165,12 @@ async function submit() {
             正在识别…
           </span>
         </span>
+        <p
+          v-if="!nav.settings.allowThirdPartyMeta"
+          class="field-hint meta-privacy-hint"
+        >
+          自动识别依赖直连或浏览器扩展；跨域受限时可能无法读取。
+        </p>
         <div class="nn-field nn-field--url">
           <el-icon class="nn-field__icon" :size="16"><Link /></el-icon>
           <div class="nn-seg" role="group" aria-label="协议">
@@ -241,35 +242,20 @@ async function submit() {
         </div>
       </label>
 
-      <div class="dlg-row">
-        <label class="nn-field-block">
-          <span class="nn-field-label">图标 URL</span>
-          <div class="nn-field">
-            <input
-              v-model="form.icon"
-              class="nn-field__input"
-              type="url"
-              placeholder="留空自动获取 favicon"
-              autocomplete="off"
-              spellcheck="false"
-              @input="markIconTouched"
-            />
-          </div>
-        </label>
-
-        <label class="nn-field-block">
-          <span class="nn-field-label">标签</span>
-          <div class="nn-field">
-            <input
-              v-model="form.tags"
-              class="nn-field__input"
-              type="text"
-              placeholder="逗号分隔"
-              autocomplete="off"
-            />
-          </div>
-        </label>
-      </div>
+      <label class="nn-field-block">
+        <span class="nn-field-label">图标 URL</span>
+        <div class="nn-field">
+          <input
+            v-model="form.icon"
+            class="nn-field__input"
+            type="url"
+            placeholder="留空自动获取 favicon"
+            autocomplete="off"
+            spellcheck="false"
+            @input="markIconTouched"
+          />
+        </div>
+      </label>
     </div>
 
     <template #footer>
@@ -290,14 +276,11 @@ async function submit() {
   padding-right: 6px;
 }
 
-.dlg-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 12px;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-  }
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--el-text-color-secondary);
 }
 
 .meta-fetching {

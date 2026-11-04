@@ -16,7 +16,6 @@ const host = inject(NAV_HOST_KEY)
         @open-mobile="host && (host.mobileOpen.value = true)"
         @add-site="host?.openAddSite()"
         @manage-categories="host?.openManageCategories()"
-        @import-data="host?.openImportData()"
       />
     </div>
   </div>
@@ -33,20 +32,21 @@ const host = inject(NAV_HOST_KEY)
   display: flex;
   align-items: stretch;
   height: var(--nn-header-height);
-  border-radius: var(--nn-header-radius, 12px);
-  background-color: var(--nn-header-glass-bg);
-  border: 0.666667px solid var(--nn-header-glass-border);
-  box-shadow: var(--nn-header-shadow);
-  backdrop-filter: blur(var(--nn-header-blur, 6px));
-  -webkit-backdrop-filter: blur(var(--nn-header-blur, 6px));
+  border-radius: var(--nn-header-radius, var(--nn-sidebar-radius, 12px));
+  background-color: var(--nn-sidebar-glass-bg, var(--nn-section-bg, #fff));
+  border: none;
+  box-shadow: var(--nn-panel-shadow, var(--nn-header-shadow));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-sizing: border-box;
   overflow: hidden;
-  color: var(--el-text-color-regular);
+  color: var(--nn-sidebar-text, var(--el-text-color-regular));
 }
 
 .nav-top-nav__brand {
   flex-shrink: 0;
-  width: var(--nn-sidebar-width);
+  width: var(--nn-top-brand-width, var(--nn-sidebar-width));
+  transition: width 0.32s var(--nn-drawer-ease, cubic-bezier(0.32, 0.72, 0, 1));
 }
 
 .nav-top-nav__header {

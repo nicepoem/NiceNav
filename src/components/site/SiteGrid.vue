@@ -83,8 +83,9 @@ onUnmounted(() => observer?.disconnect())
   display: flex;
   flex-direction: column;
   gap: 18px;
-  /* 收紧边距，让内容更贴近参考图的紧凑布局 */
-  padding: 12px 12px 48px 8px;
+  /* 左右与顶栏 chrome 对齐：右 = sidebar-gap；左由侧栏 rail 承担 */
+  padding: var(--nn-sidebar-gap) var(--nn-sidebar-gap) 48px 0;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {

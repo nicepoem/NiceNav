@@ -1,14 +1,14 @@
 import Dexie, { type Table } from 'dexie'
 import { getDescendantIds } from '../category-tree'
 import {
-  DEFAULT_SETTINGS,
-  normalizeDockOrder,
-  normalizeHeaderMenus,
+  hasObsoleteSettings,
+  normalizeAppSettings,
   SEED_VERSION,
   stripUnusedHeaderMenus,
 } from '../defaults'
 import { createSeedData } from '../seed'
 import type { AppSettings, Category, NavData, Site } from '../types'
+import { clonePlain } from './clone'
 import type { NavStorage } from './types'
 
 type MetaRow = {
@@ -52,23 +52,22 @@ export class IndexedDbStorage implements NavStorage {
   }
 
   private async ensureSeed(): Promise<void> {
-    if (this.seeded) return
-    const seededFlag = await this.db.meta.get('seeded')
     const seedVersionRow = await this.db.meta.get('seedVersion')
-    const count = await this.db.categories.count()
     const currentVersion = typeof seedVersionRow?.value === 'number' ? seedVersionRow.value : 0
 
+    // 版本落后时强制重写（不依赖内存 seeded，避免 HMR 挡升级）
+    if (currentVersion < SEED_VERSION) {
+      await this.writeSeed()
+      this.seeded = true
+      return
+    }
+
+    if (this.seeded) return
+
+    const seededFlag = await this.db.meta.get('seeded')
+    const count = await this.db.categories.count()
     if (!seededFlag && count === 0) {
       await this.writeSeed()
-    } else if (currentVersion < SEED_VERSION) {
-      // 示例数据升级：刷新带有默认 cat-* 前缀的演示库
-      const cats = await this.db.categories.toArray()
-      const allDemoIds = cats.length > 0 && cats.every((c) => c.id.startsWith('cat-'))
-      if (count === 0 || allDemoIds) {
-        await this.writeSeed()
-      } else {
-        await this.db.meta.put({ key: 'seedVersion', value: SEED_VERSION })
-      }
     } else if (!seededFlag) {
       await this.db.meta.put({ key: 'seeded', value: true })
       await this.db.meta.put({ key: 'seedVersion', value: SEED_VERSION })
@@ -84,19 +83,14 @@ export class IndexedDbStorage implements NavStorage {
       this.db.meta.get('settings'),
     ])
 
-    const settings =
-      settingsRow && typeof settingsRow.value === 'object'
-        ? ({ ...DEFAULT_SETTINGS, ...(settingsRow.value as AppSettings) } as AppSettings)
-        : { ...DEFAULT_SETTINGS, searchEngines: [...DEFAULT_SETTINGS.searchEngines] }
-    settings.dockOrder = normalizeDockOrder(settings.dockOrder)
-    const headerMenus = normalizeHeaderMenus(settings.headerMenus)
+    const rawSettings =
+      settingsRow && typeof settingsRow.value === 'object' ? settingsRow.value : null
+    const settings = normalizeAppSettings(rawSettings as AppSettings | null)
+    const headerMenus = settings.headerMenus
     const cleanedMenus = stripUnusedHeaderMenus(headerMenus)
     settings.headerMenus = cleanedMenus
-    settings.searchEngines = settings.searchEngines?.length
-      ? settings.searchEngines
-      : [...DEFAULT_SETTINGS.searchEngines]
-    if (cleanedMenus.length !== headerMenus.length) {
-      await this.db.meta.put({ key: 'settings', value: settings })
+    if (cleanedMenus.length !== headerMenus.length || hasObsoleteSettings(rawSettings)) {
+      await this.db.meta.put({ key: 'settings', value: clonePlain(settings) })
     }
 
     return {
@@ -107,12 +101,13 @@ export class IndexedDbStorage implements NavStorage {
   }
 
   async saveAll(data: NavData): Promise<void> {
+    const plain = clonePlain(data)
     await this.db.transaction('rw', this.db.categories, this.db.sites, this.db.meta, async () => {
       await this.db.categories.clear()
       await this.db.sites.clear()
-      await this.db.categories.bulkPut(data.categories)
-      await this.db.sites.bulkPut(data.sites)
-      await this.db.meta.put({ key: 'settings', value: data.settings })
+      await this.db.categories.bulkPut(plain.categories)
+      await this.db.sites.bulkPut(plain.sites)
+      await this.db.meta.put({ key: 'settings', value: plain.settings })
       await this.db.meta.put({ key: 'seeded', value: true })
       await this.db.meta.put({ key: 'seedVersion', value: SEED_VERSION })
     })
@@ -121,12 +116,12 @@ export class IndexedDbStorage implements NavStorage {
 
   async putCategory(category: Category): Promise<void> {
     await this.ensureSeed()
-    await this.db.categories.put(category)
+    await this.db.categories.put(clonePlain(category))
   }
 
   async putSite(site: Site): Promise<void> {
     await this.ensureSeed()
-    await this.db.sites.put(site)
+    await this.db.sites.put(clonePlain(site))
   }
 
   async removeCategory(id: string): Promise<void> {
@@ -148,7 +143,7 @@ export class IndexedDbStorage implements NavStorage {
 
   async saveSettings(settings: AppSettings): Promise<void> {
     await this.ensureSeed()
-    await this.db.meta.put({ key: 'settings', value: settings })
+    await this.db.meta.put({ key: 'settings', value: clonePlain(settings) })
   }
 
   async clear(): Promise<void> {

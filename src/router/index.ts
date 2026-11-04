@@ -13,12 +13,6 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
       meta: { moduleId: 'nav' },
     },
-
-    {
-      path: '/settings',
-      name: 'settings',
-      component: () => import('@/views/SettingsView.vue'),
-    },
   ],
 })
 

@@ -5,7 +5,7 @@ export type NavHostContext = {
   mobileOpen: Ref<boolean>
   openAddSite: () => void
   openManageCategories: () => void
-  openImportData: () => void
+  openSettings: () => void
 }
 
 export type NavMainHandlers = {

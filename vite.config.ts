@@ -4,56 +4,10 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { defineConfig, type Plugin } from 'vite'
+import { parseHtmlMeta } from './src/core/html-meta.ts'
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-
-function cleanText(value: string, max = 240): string {
-  const text = value
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  if (text.length <= max) return text
-  return `${text.slice(0, max - 1).trim()}…`
-}
-
-function pickAttr(tag: string, name: string): string {
-  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'))
-  return match?.[2]?.trim() ?? ''
-}
-
-function pickMetaContent(html: string, key: string): string {
-  const tags = html.match(/<meta\b[^>]*>/gi) ?? []
-  const wanted = key.toLowerCase()
-  for (const tag of tags) {
-    const name = (pickAttr(tag, 'name') || pickAttr(tag, 'property')).toLowerCase()
-    if (name !== wanted) continue
-    const content = pickAttr(tag, 'content')
-    if (content) return content
-  }
-  return ''
-}
-
-function parseHtmlMeta(html: string) {
-  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
-  const title =
-    cleanText(pickMetaContent(html, 'og:title')) ||
-    cleanText(pickMetaContent(html, 'twitter:title')) ||
-    cleanText(titleMatch?.[1] ?? '')
-
-  const description =
-    cleanText(pickMetaContent(html, 'description'), 320) ||
-    cleanText(pickMetaContent(html, 'og:description'), 320) ||
-    cleanText(pickMetaContent(html, 'twitter:description'), 320)
-
-  return { title, description, icon: '' }
-}
 
 async function fetchText(url: string, timeoutMs = 12000): Promise<string> {
   const response = await fetch(url, {
@@ -68,21 +22,12 @@ async function fetchText(url: string, timeoutMs = 12000): Promise<string> {
   return response.text()
 }
 
+/** 仅直连目标页，不走第三方可读代理（本地优先） */
 async function loadPageMeta(target: string) {
-  try {
-    const html = await fetchText(target)
-    const meta = parseHtmlMeta(html)
-    if (meta.title || meta.description) return meta
-  } catch {
-    // 直连失败时走可读代理
-  }
-
-  const text = await fetchText(`https://r.jina.ai/${target}`)
-  const title = text.match(/^Title:\s*(.+)$/m)?.[1]?.trim() ?? ''
-  const body = text.split('Markdown Content:')[1] ?? text
-  const description = cleanText(body, 180)
-  if (!title && !description) throw new Error('empty meta')
-  return { title, description, icon: '' }
+  const html = await fetchText(target)
+  const meta = parseHtmlMeta(html, target)
+  if (!meta.title && !meta.description) throw new Error('empty meta')
+  return meta
 }
 
 /** 开发时由 Vite 代抓目标网页，避开浏览器跨域 */
@@ -124,11 +69,11 @@ export default defineConfig({
     pageMetaProxy(),
     vue(),
     AutoImport({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
       dts: 'src/types/auto-imports.d.ts',
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
       dts: 'src/types/components.d.ts',
     }),
   ],

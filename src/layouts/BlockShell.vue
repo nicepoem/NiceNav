@@ -90,8 +90,12 @@ const showFooter = computed(() => has('footer'))
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--nn-page-bg);
+  background: transparent;
   --nn-drawer-slot: var(--nn-sidebar-rail);
+  /* 顶栏品牌区 = 侧栏卡片宽 + 内容间距，使顶栏右段与分类块左缘对齐 */
+  --nn-top-brand-width: calc(
+    var(--nn-sidebar-width) + var(--nn-sidebar-content-gap)
+  );
   --nn-sidebar-sticky-top: calc(
     var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-sidebar-gap)
   );
@@ -99,6 +103,9 @@ const showFooter = computed(() => has('footer'))
 
   &.is-collapsed {
     --nn-drawer-slot: var(--nn-sidebar-rail-collapsed);
+    --nn-top-brand-width: calc(
+      var(--nn-sidebar-collapsed) + var(--nn-sidebar-content-gap)
+    );
   }
 
   &.is-debug {

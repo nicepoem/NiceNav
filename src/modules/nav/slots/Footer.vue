@@ -1,11 +1,5 @@
-<script setup lang="ts">
-import { useBrand } from '@/composables/useBrand'
-
-const { siteName } = useBrand()
-</script>
-
 <template>
-  <p class="nav-footer">{{ siteName }} · 本地导航</p>
+  <p class="nav-footer">NiceNav · 本地导航</p>
 </template>
 
 <style scoped lang="scss">

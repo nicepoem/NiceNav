@@ -40,6 +40,7 @@ function enqueueIfNeeded(retry = false) {
     site: props.site,
     priority: top,
     retry,
+    thirdParty: nav.settings.allowThirdPartyFavicon === true,
     persist: (iconUrl) => nav.patchSiteIcon(props.site.id, iconUrl),
     onFail: () => {
       iconFailed.value = true
@@ -106,6 +107,22 @@ function onCardClick() {
   if (props.sortable) return
   emit('open', props.site)
 }
+
+function onCardKeydown(event: KeyboardEvent) {
+  if (props.sortable) return
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault()
+    onCardClick()
+  }
+}
+
+const iconFallbackTitle = computed(() => {
+  if (hasStoredIcon.value || showSkeleton.value) return ''
+  if (!nav.settings.allowThirdPartyFavicon) {
+    return '未取到网站图标'
+  }
+  return '未取到网站图标'
+})
 </script>
 
 <template>
@@ -121,9 +138,13 @@ function onCardClick() {
     class="url-card"
     :class="{ 'is-sortable': sortable }"
     :data-id="site.id"
+    role="link"
+    :tabindex="sortable ? -1 : 0"
+    :aria-label="site.title"
     @click="onCardClick"
+    @keydown="onCardKeydown"
   >
-    <div class="url-card__icon">
+    <div class="url-card__icon" :title="iconFallbackTitle || undefined">
       <img
         v-if="hasStoredIcon"
         :src="site.icon"
@@ -134,7 +155,7 @@ function onCardClick() {
         @error="onStoredIconError"
       />
       <span v-else-if="showSkeleton" class="url-card__skeleton" aria-hidden="true" />
-      <el-icon v-else :size="22"><Link /></el-icon>
+      <el-icon v-else :size="22" aria-hidden="true"><Link /></el-icon>
     </div>
 
     <div class="url-card__body">
@@ -185,6 +206,11 @@ function onCardClick() {
       color: var(--nn-primary);
       opacity: 1;
     }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--nn-primary);
+    outline-offset: 2px;
   }
 
   &.is-sortable {

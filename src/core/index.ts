@@ -17,10 +17,13 @@ export {
   DEFAULT_DOCK_ORDER,
   DEFAULT_SETTINGS,
   SEED_VERSION,
+  hasObsoleteSettings,
+  normalizeAppSettings,
   normalizeDockOrder,
   normalizeHeaderMenus,
 } from './defaults'
 export { createSeedData } from './seed'
+export { createFullDemoData, createFullDemoPayload } from './demo-catalog'
 export {
   buildCategoryTree,
   flattenCategoryTree,
@@ -29,6 +32,14 @@ export {
   type CategoryTreeNode,
 } from './category-tree'
 export { createId } from './id'
+export {
+  isAllowedHttpUrl,
+  isValidSearchEngineTemplate,
+  sanitizeHttpUrl,
+  sanitizeIconUrl,
+  siteDedupeKey,
+} from './url'
+export { cleanHtmlText, parseHtmlMeta, type HtmlPageMeta } from './html-meta'
 export {
   navExportPayloadSchema,
   parseNavExportPayload,
@@ -44,8 +55,11 @@ export {
   faviconUrl,
   filterSites,
   resolveSiteIcon,
+  sanitizeNavGraph,
   siteHostname,
   validateImportJson,
 } from './import-export'
+export type { FaviconCandidateOptions } from './import-export'
 export type { NavStorage } from './storage/types'
 export { IndexedDbStorage } from './storage/indexeddb'
+export { MemoryStorage } from './storage/memory'
