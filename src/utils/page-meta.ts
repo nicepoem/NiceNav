@@ -15,16 +15,10 @@ type ChromeRuntime = {
   lastError?: { message?: string }
 }
 
-type ChromePermissions = {
-  contains: (perm: { origins: string[] }) => Promise<boolean>
-  request: (perm: { origins: string[] }) => Promise<boolean>
-}
-
 declare global {
   interface Window {
     chrome?: {
       runtime?: ChromeRuntime
-      permissions?: ChromePermissions
     }
   }
 }
@@ -116,23 +110,10 @@ async function fetchViaSameOriginProxy(
   }
 }
 
-async function ensureExtensionOriginPermission(url: string): Promise<boolean> {
-  const permissions = window.chrome?.permissions
-  if (!permissions?.contains || !permissions.request) return true
-  try {
-    const origin = `${new URL(url).origin}/*`
-    if (await permissions.contains({ origins: [origin] })) return true
-    return await permissions.request({ origins: [origin] })
-  } catch {
-    return false
-  }
-}
-
+/** 扩展已在 manifest 声明 host_permissions，由 background 直连抓取，不再按站点弹窗授权 */
 async function fetchViaExtension(url: string): Promise<PageMeta | null> {
   const runtime = window.chrome?.runtime
   if (!runtime?.id) return null
-  const allowed = await ensureExtensionOriginPermission(url)
-  if (!allowed) return null
 
   return new Promise((resolve) => {
     const timer = window.setTimeout(() => resolve(null), 10000)
