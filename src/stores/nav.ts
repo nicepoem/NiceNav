@@ -450,36 +450,6 @@ export const useNavStore = defineStore('nav', () => {
     }
   }
 
-  /** 恢复为全量演示数据（覆盖分类 / 站点 / 设置） */
-  async function resetToSeed() {
-    const seed = createSeedData()
-    await storage.saveAll(seed)
-    categories.value = seed.categories
-    sites.value = seed.sites
-    settings.value = seed.settings
-    notifyOtherTabs()
-  }
-
-  /** 一键导入完整示例导航（覆盖分类与站点，保留现有设置） */
-  async function importFullDemo() {
-    const seed = createSeedData()
-    const data = {
-      categories: seed.categories,
-      sites: seed.sites,
-      settings: normalizeAppSettings(settings.value),
-    }
-    await storage.saveAll(data)
-    categories.value = data.categories
-    sites.value = data.sites
-    settings.value = data.settings
-    notifyOtherTabs()
-    return {
-      mode: 'replace' as const,
-      categories: data.categories.length,
-      sites: data.sites.length,
-    }
-  }
-
   async function clearAll() {
     await storage.clear()
     clearSiteIconHostCache()
@@ -537,8 +507,6 @@ export const useNavStore = defineStore('nav', () => {
     updateSettings,
     exportBackup,
     importBackup,
-    resetToSeed,
-    importFullDemo,
     clearAll,
     openSite,
     openExternalSearch,

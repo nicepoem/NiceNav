@@ -1,6 +1,6 @@
 import { getDescendantIds } from '../category-tree'
 import { normalizeAppSettings } from '../defaults'
-import { createSeedData } from '../seed'
+import { createSeedData } from '../demo-catalog'
 import type { AppSettings, Category, NavData, Site } from '../types'
 import type { NavStorage } from './types'
 

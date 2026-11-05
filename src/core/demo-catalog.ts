@@ -1,4 +1,4 @@
-import type { Category, NavData, NavExportPayload, Site } from './types'
+import type { Category, NavData, Site } from './types'
 import { DEFAULT_SETTINGS } from './defaults'
 
 const now = () => Date.UTC(2026, 0, 1)
@@ -721,14 +721,5 @@ export function createFullDemoData(): NavData {
   }
 }
 
-/** 完整示例导航，供设置页「一键导入」 */
-export function createFullDemoPayload(): NavExportPayload {
-  const data = createFullDemoData()
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    categories: data.categories,
-    sites: data.sites,
-    settings: data.settings,
-  }
-}
+/** 默认种子：与全量演示数据相同 */
+export const createSeedData = createFullDemoData

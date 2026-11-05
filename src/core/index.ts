@@ -22,8 +22,7 @@ export {
   normalizeDockOrder,
   normalizeHeaderMenus,
 } from './defaults'
-export { createSeedData } from './seed'
-export { createFullDemoData, createFullDemoPayload } from './demo-catalog'
+export { createFullDemoData, createSeedData } from './demo-catalog'
 export {
   buildCategoryTree,
   flattenCategoryTree,

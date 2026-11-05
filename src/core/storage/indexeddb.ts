@@ -6,7 +6,7 @@ import {
   SEED_VERSION,
   stripUnusedHeaderMenus,
 } from '../defaults'
-import { createSeedData } from '../seed'
+import { createSeedData } from '../demo-catalog'
 import type { AppSettings, Category, NavData, Site } from '../types'
 import { clonePlain } from './clone'
 import type { NavStorage } from './types'
