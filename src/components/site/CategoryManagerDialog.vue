@@ -23,12 +23,17 @@ const visible = computed({
     width="640px"
     align-center
     destroy-on-close
-    class="nn-dialog"
+    class="nn-dialog nn-dialog--cat-mgr"
     :show-close="false"
   >
     <template #header>
       <div class="nn-dlg-head">
-        <h2 class="nn-dlg-head__title">分类管理</h2>
+        <div>
+          <h2 class="nn-dlg-head__title">分类管理</h2>
+          <p class="nn-dlg-head__hint nn-dlg-head__hint--desktop">
+            拖拽排序；左右拖可调整父子层级
+          </p>
+        </div>
         <button
           type="button"
           class="nn-dlg-head__close"

@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { provide, ref } from 'vue'
+import { defineAsyncComponent, provide, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { Category, Site } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
 import ModuleHost from '@/modules/ModuleHost.vue'
 import { NAV_HOST_KEY, NAV_MAIN_HANDLERS_KEY } from '@/modules/nav'
-import SiteFormDialog from '@/components/site/SiteFormDialog.vue'
-import CategoryFormDialog from '@/components/site/CategoryFormDialog.vue'
-import CategoryManagerDialog from '@/components/site/CategoryManagerDialog.vue'
-import CreateFormDialog from '@/components/site/CreateFormDialog.vue'
-import ImportDialog from '@/components/site/ImportDialog.vue'
 import FloatingDock from '@/components/layout/FloatingDock.vue'
 import { confirmDeleteCategory, confirmDeleteSite } from '@/utils/confirm-delete'
+
+const SiteFormDialog = defineAsyncComponent(() => import('@/components/site/SiteFormDialog.vue'))
+const CategoryFormDialog = defineAsyncComponent(
+  () => import('@/components/site/CategoryFormDialog.vue'),
+)
+const CategoryManagerDialog = defineAsyncComponent(
+  () => import('@/components/site/CategoryManagerDialog.vue'),
+)
+const CreateFormDialog = defineAsyncComponent(() => import('@/components/site/CreateFormDialog.vue'))
+const ImportDialog = defineAsyncComponent(() => import('@/components/site/ImportDialog.vue'))
 
 const nav = useNavStore()
 const mobileOpen = ref(false)
@@ -92,19 +97,25 @@ provide(NAV_MAIN_HANDLERS_KEY, {
 <template>
   <ModuleHost module-id="nav">
     <CreateFormDialog
+      v-if="createDialog"
       v-model="createDialog"
       :categories="nav.categories"
       :prefer-category-id="preferCategoryId"
     />
     <SiteFormDialog
+      v-if="siteDialog"
       v-model="siteDialog"
       :site="editingSite"
       :categories="nav.categories"
       :prefer-category-id="preferCategoryId"
     />
-    <CategoryFormDialog v-model="categoryDialog" :category="editingCategory" />
-    <CategoryManagerDialog v-model="categoryManagerDialog" />
-    <ImportDialog v-model="settingsDialog" />
+    <CategoryFormDialog
+      v-if="categoryDialog"
+      v-model="categoryDialog"
+      :category="editingCategory"
+    />
+    <CategoryManagerDialog v-if="categoryManagerDialog" v-model="categoryManagerDialog" />
+    <ImportDialog v-if="settingsDialog" v-model="settingsDialog" />
     <FloatingDock
       @add-site="openAddSite()"
       @manage-categories="openManageCategories()"

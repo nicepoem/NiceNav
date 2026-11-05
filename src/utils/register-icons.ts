@@ -1,27 +1,7 @@
 import { addCollection } from '@iconify/vue'
-import { icons as mdiIcons } from '@iconify-json/mdi'
-import { CATEGORY_ICON_OPTIONS, DEFAULT_CATEGORY_ICON } from '@/constants/category-icons'
+import mdiSubset from '@/assets/icons/mdi-subset.json'
 
-/** 仅打包分类用到的 mdi 图标，避免运行时请求 CDN */
+/** 仅注册分类用到的 mdi 子集（构建产物），避免打入完整 @iconify-json/mdi */
 export function registerCategoryIcons() {
-  const needed = new Set<string>()
-  for (const option of CATEGORY_ICON_OPTIONS) {
-    if (option.name.startsWith('mdi:')) needed.add(option.name.slice(4))
-  }
-  if (DEFAULT_CATEGORY_ICON.startsWith('mdi:')) {
-    needed.add(DEFAULT_CATEGORY_ICON.slice(4))
-  }
-
-  const body: Record<string, (typeof mdiIcons.icons)[string]> = {}
-  for (const name of needed) {
-    const data = mdiIcons.icons[name]
-    if (data) body[name] = data
-  }
-
-  addCollection({
-    prefix: 'mdi',
-    icons: body,
-    width: mdiIcons.width,
-    height: mdiIcons.height,
-  })
+  addCollection(mdiSubset as Parameters<typeof addCollection>[0])
 }

@@ -10,6 +10,7 @@ import {
   isSiteIconFailed,
   rememberSiteIcon,
 } from '@/utils/site-icon'
+import { observeIconTrigger, unobserveIconTrigger } from '@/utils/shared-icon-observer'
 
 const props = defineProps<{
   site: Site
@@ -26,9 +27,13 @@ const emit = defineEmits<{
 const nav = useNavStore()
 const rootEl = ref<HTMLElement | null>(null)
 const iconFailed = ref(isSiteIconFailed(props.site.id))
-let observer: IntersectionObserver | null = null
 
-const hasStoredIcon = computed(() => Boolean(props.site.icon?.trim()))
+const displayIcon = computed(() => {
+  const map = nav.iconOverrides
+  if (map.has(props.site.id)) return map.get(props.site.id) || ''
+  return props.site.icon?.trim() || ''
+})
+const hasStoredIcon = computed(() => Boolean(displayIcon.value))
 const showSkeleton = computed(() => !hasStoredIcon.value && !iconFailed.value)
 const tip = computed(() => props.site.description?.trim() || '')
 
@@ -37,7 +42,7 @@ function enqueueIfNeeded(retry = false) {
   if (!retry && iconFailed.value) return
   const top = rootEl.value.getBoundingClientRect().top + window.scrollY
   enqueueSiteIcon({
-    site: props.site,
+    site: { ...props.site, icon: displayIcon.value || undefined },
     priority: top,
     retry,
     thirdParty: nav.settings.allowThirdPartyFavicon === true,
@@ -49,34 +54,20 @@ function enqueueIfNeeded(retry = false) {
 }
 
 function setupObserver() {
-  observer?.disconnect()
-  if (hasStoredIcon.value || !rootEl.value) return
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue
-        enqueueIfNeeded()
-      }
-    },
-    {
-      // 视口外提前拉取，减少滚到卡片时才开始请求
-      root: null,
-      rootMargin: '640px 0px',
-      threshold: 0.01,
-    },
-  )
-  observer.observe(rootEl.value)
+  if (!rootEl.value) return
+  unobserveIconTrigger(rootEl.value)
+  if (hasStoredIcon.value) return
+  observeIconTrigger(rootEl.value, () => enqueueIfNeeded())
 }
 
 watch(
-  () => [props.site.id, props.site.icon, props.site.url] as const,
+  () => [props.site.id, displayIcon.value, props.site.url] as const,
   () => {
     iconFailed.value = isSiteIconFailed(props.site.id)
     if (hasStoredIcon.value) {
-      rememberSiteIcon(props.site.url, props.site.icon ?? '')
+      rememberSiteIcon(props.site.url, displayIcon.value)
       cancelSiteIcon(props.site.id)
-      observer?.disconnect()
+      if (rootEl.value) unobserveIconTrigger(rootEl.value)
       return
     }
     setupObserver()
@@ -84,18 +75,16 @@ watch(
 )
 
 onMounted(() => {
-  if (hasStoredIcon.value) rememberSiteIcon(props.site.url, props.site.icon ?? '')
+  if (hasStoredIcon.value) rememberSiteIcon(props.site.url, displayIcon.value)
   setupObserver()
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = null
+  if (rootEl.value) unobserveIconTrigger(rootEl.value)
   cancelSiteIcon(props.site.id)
 })
 
 async function onStoredIconError() {
-  // 已落库地址失效：清域名缓存后重新探测
   iconFailed.value = false
   invalidateSiteIcon(props.site.url)
   await nav.patchSiteIcon(props.site.id, '', { overwrite: true })
@@ -118,10 +107,7 @@ function onCardKeydown(event: KeyboardEvent) {
 
 const iconFallbackTitle = computed(() => {
   if (hasStoredIcon.value || showSkeleton.value) return ''
-  if (!nav.settings.allowThirdPartyFavicon) {
-    return '未取到网站图标'
-  }
-  return '未取到网站图标'
+  return '图标加载失败'
 })
 </script>
 
@@ -147,9 +133,9 @@ const iconFallbackTitle = computed(() => {
     <div class="url-card__icon" :title="iconFallbackTitle || undefined">
       <img
         v-if="hasStoredIcon"
-        :src="site.icon"
+        :src="displayIcon"
         :alt="site.title"
-        loading="eager"
+        loading="lazy"
         decoding="async"
         referrerpolicy="no-referrer"
         @error="onStoredIconError"
@@ -188,16 +174,10 @@ const iconFallbackTitle = computed(() => {
   box-shadow: var(--nn-card-inset);
   border: none;
   cursor: pointer;
-  transition:
-    transform var(--nn-transition),
-    background-color var(--nn-transition),
-    box-shadow var(--nn-transition);
-
+  /* 视口外跳过绘制，大列表更顺 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
   &:hover {
-    transform: translateY(-1px);
-    background: var(--nn-card-bg-hover, color-mix(in srgb, var(--nn-primary) 6%, var(--nn-card-bg)));
-    box-shadow: var(--nn-card-inset-hover);
-
     .url-card__title {
       color: var(--nn-primary);
     }
@@ -205,6 +185,7 @@ const iconFallbackTitle = computed(() => {
     .url-card__go {
       color: var(--nn-primary);
       opacity: 1;
+      transform: translateY(-50%) translateX(0);
     }
   }
 
@@ -235,7 +216,7 @@ const iconFallbackTitle = computed(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: color-mix(in srgb, #fff 55%, var(--nn-card-bg));
+  background: var(--nn-card-icon-bg, color-mix(in srgb, #fff 55%, var(--nn-card-bg)));
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -280,21 +261,20 @@ const iconFallbackTitle = computed(() => {
 
 .url-card__title {
   font-size: 14px;
-  font-weight: 650;
-  line-height: 1.35;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--el-text-color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color var(--nn-transition-fast);
+  transition: color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .url-card__desc {
   margin-top: 2px;
   font-size: 12px;
-  font-weight: 400;
+  line-height: 1.3;
   color: var(--el-text-color-secondary);
-  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -302,89 +282,36 @@ const iconFallbackTitle = computed(() => {
 
 .url-card__go {
   position: absolute;
-  top: 8px;
   right: 8px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
   color: var(--el-text-color-placeholder);
   opacity: 0;
   transition:
-    color var(--nn-transition-fast),
-    opacity var(--nn-transition-fast);
-  pointer-events: none;
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .url-card__actions {
   position: absolute;
-  top: 6px;
   right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  align-items: center;
-  gap: 0;
+  gap: 2px;
   opacity: 0;
   transition: opacity var(--nn-transition-fast);
-  padding: 1px;
-  background: color-mix(in srgb, var(--el-bg-color) 92%, transparent);
-  border-radius: var(--nn-item-radius);
-
-  :deep(.el-button) {
-    margin: 0;
-    width: 26px;
-    height: 26px;
-  }
-
-  :deep(.el-button + .el-button) {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 900px) {
   .url-card {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 10px;
+    padding: 10px 12px;
     padding-right: 24px;
-    border-radius: var(--nn-item-radius, 8px);
-    min-width: 0;
-  }
-
-  .url-card__icon {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-
-    img {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  .url-card__body {
-    min-width: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-  }
-
-  .url-card__title {
-    font-size: 13px;
-  }
-
-  .url-card__desc {
-    margin-top: 2px;
-    font-size: 11px;
   }
 
   .url-card__go {
-    top: 6px;
     right: 6px;
-  }
-
-  .url-card.is-sortable {
-    padding-right: 10px;
-  }
-
-  .url-card.is-sortable .url-card__actions {
-    opacity: 1;
   }
 }
 </style>

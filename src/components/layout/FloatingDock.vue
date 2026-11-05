@@ -203,6 +203,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .float-dock {
   position: fixed;
+  /* 贴视口右边：超宽屏落在内容区外的无背景留白 */
   right: 16px;
   bottom: 24px;
   z-index: 80;
@@ -243,9 +244,10 @@ onUnmounted(() => {
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: var(--nn-sidebar-text, var(--el-text-color-regular));
-  background: var(--nn-section-bg, #fff);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+  color: var(--el-text-color-regular);
+  /* 与左侧 sidebar-fab / 侧栏同款 */
+  background: var(--nn-elevated-bg);
+  box-shadow: var(--nn-elevated-shadow);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition:
@@ -256,9 +258,8 @@ onUnmounted(() => {
 
   &:hover {
     color: var(--nn-primary);
-    background: var(--nn-section-bg, #fff);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
     transform: translateY(-1px);
+    box-shadow: var(--nn-elevated-shadow-hover);
   }
 
   &:active {
@@ -292,14 +293,16 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
   .float-dock {
+    /* 窄屏无 gutter，贴视口右边 */
     right: 10px;
-    bottom: 78px; /* 避开左下角侧栏浮动按钮 */
+    bottom: 20px;
+    gap: 8px;
   }
 
   .dock-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 11px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
   }
 }
 </style>

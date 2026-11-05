@@ -395,7 +395,8 @@ export type FaviconCandidateOptions = {
 
 /**
  * favicon 候选。
- * 默认仅站点自身路径；开启 thirdParty 后再追加国内/国外 CDN。
+ * 默认只探 /favicon.ico（/favicon.png 大量 404，会刷控制台）。
+ * 开启 thirdParty 后再追加 CDN；png 仅作兜底。
  */
 export function faviconCandidates(
   siteUrl: string,
@@ -404,16 +405,16 @@ export function faviconCandidates(
   const host = siteHostname(siteUrl)
   if (!host) return []
   const enc = encodeURIComponent(host)
-  const local = [`https://${host}/favicon.ico`, `https://${host}/favicon.png`]
+  const local = [`https://${host}/favicon.ico`]
   if (!options?.thirdParty) return local
   return [
     ...local,
-    `https://api.iowen.cn/favicon/${host}.png`,
-    `https://cravatar.com/favicon/api/index.php?url=${enc}`,
-    `https://favicon.cccyun.cc/${host}`,
-    `https://www.google.com/s2/favicons?domain=${enc}&sz=64`,
     `https://icons.duckduckgo.com/ip3/${host}.ico`,
-    `https://icon.horse/icon/${host}`,
+    `https://www.google.com/s2/favicons?domain=${enc}&sz=64`,
+    `https://api.iowen.cn/favicon/${host}.png`,
+    `https://favicon.cccyun.cc/${host}`,
+    `https://cravatar.com/favicon/api/index.php?url=${enc}`,
+    `https://${host}/favicon.png`,
   ]
 }
 

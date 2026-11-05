@@ -3,16 +3,18 @@
   --el-border-radius-base: 8px;
   --el-border-radius-small: 6px;
   --el-border-radius-round: 20px;
-  --nn-primary: #1e80ff;
-  --nn-primary-rgb: 30, 128, 255;
-  --el-color-primary: #1e80ff;
-  --el-color-primary-rgb: 30, 128, 255;
-  --el-color-primary-light-3: color-mix(in srgb, #1e80ff 70%, #fff);
-  --el-color-primary-light-5: color-mix(in srgb, #1e80ff 50%, #fff);
-  --el-color-primary-light-7: color-mix(in srgb, #1e80ff 30%, #fff);
-  --el-color-primary-light-8: color-mix(in srgb, #1e80ff 20%, #fff);
-  --el-color-primary-light-9: color-mix(in srgb, #1e80ff 10%, #fff);
-  --el-color-primary-dark-2: color-mix(in srgb, #1e80ff 80%, #000);
+  --nn-primary: #f1404b;
+  --nn-primary-rgb: 241, 64, 75;
+  --nn-accent: #f1404b;
+  --nn-accent-rgb: 241, 64, 75;
+  --el-color-primary: #f1404b;
+  --el-color-primary-rgb: 241, 64, 75;
+  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #fff);
+  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 80%, #000);
 
   /* 展开侧栏：紧凑宽度 */
   --nn-sidebar-width: 120px;
@@ -23,10 +25,13 @@
   --nn-header-height: 64px;
   /* 全局搜索行高度（与 GlobalSearch .cmd-search min-height 一致） */
   --nn-search-height: 48px;
+  /* 侧栏+主内容最大宽度；顶栏 / 搜索仍全宽 */
+  --nn-shell-max-width: 1600px;
+  --nn-shell-offset: max(0px, calc((100vw - var(--nn-shell-max-width)) / 2));
   /* 侧栏卡片与顶栏 / 页面边缘的间距 */
-  --nn-sidebar-gap: 20px;
+  --nn-sidebar-gap: 24px;
   /* 侧栏与右侧内容之间的间距（小于外边距） */
-  --nn-sidebar-content-gap: 8px;
+  --nn-sidebar-content-gap: 12px;
   --nn-sidebar-rail: calc(
     var(--nn-sidebar-width) + var(--nn-sidebar-gap) + var(--nn-sidebar-content-gap)
   );
@@ -42,9 +47,9 @@
   --nn-item-radius: 8px;
   --nn-item-pad-y: 4px;
   --nn-item-pad-x: 8px;
-  /* 选中 / 悬浮：灰底 + 主色字 */
-  --nn-item-active-bg: #f0f2f5;
-  --nn-item-hover-bg: #f0f2f5;
+  /* 选中 / 悬浮：浅灰底 + 主色字 */
+  --nn-item-active-bg: #f5f6f8;
+  --nn-item-hover-bg: #f5f6f8;
 
   /* 全局平滑过渡 */
   --nn-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -63,17 +68,24 @@
 
   --main-shadow: rgba(0, 0, 0, 0.1);
   --nn-sidebar-bg: #ffffff;
+  --nn-sidebar-surface: #ffffff;
+  --nn-elevated-bg: #ffffff;
+  --nn-elevated-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+  --nn-elevated-shadow-hover: 0 6px 22px rgba(15, 23, 42, 0.12);
+  --nn-chrome-bg: #ffffff;
+  --nn-chrome-shadow: none;
+  --nn-sidebar-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
   /* 侧栏与内容区一致：实色白底，无磨砂 */
-  --nn-sidebar-glass-bg: var(--nn-section-bg);
+  --nn-sidebar-glass-bg: var(--nn-sidebar-surface);
   --nn-sidebar-glass-border: transparent;
   --nn-sidebar-blur: 0px;
-  --nn-panel-shadow: 0 2px 10px rgba(0, 21, 41, 0.08);
+  --nn-panel-shadow: none;
   --nn-sidebar-pad: 6px;
   --nn-sidebar-logo-bg: #ffffff;
   --nn-sidebar-logo-text: #303133;
   --nn-sidebar-text: #303133;
   --nn-sidebar-text-active: var(--nn-primary);
-  --nn-menu-hover-bg: rgba(0, 0, 0, 0.05);
+  --nn-menu-hover-bg: rgba(0, 0, 0, 0.03);
 
   --nn-header-bg: var(--nn-sidebar-bg);
   /* 顶栏与侧栏同色实底，无透明 */
@@ -83,23 +95,17 @@
   --nn-header-shadow: var(--nn-panel-shadow);
   --nn-header-radius: var(--nn-sidebar-radius);
 
-  --nn-page-bg: #f2f4f7;
-  /* 点格背景 */
-  --nn-page-dot: rgba(15, 23, 42, 0.14);
-  --nn-page-dot-size: 18px;
-  --nn-page-pattern: radial-gradient(
-    circle at center,
-    var(--nn-page-dot) 1px,
-    transparent 1.2px
-  );
+  --nn-page-bg: #f3f4f6;
   --nn-section-bg: #ffffff;
+  --nn-cat-block-bg: #ffffff;
   --nn-surface-bg: transparent;
-  /* 网址卡片：白底，透出页面点格 */
-  /* 网址卡片：浅灰底 + 内嵌阴影 */
+  /* 网址卡片：浅灰底 */
   --nn-card-bg: #f5f6f8;
-  --nn-card-bg-hover: #eef0f4;
-  --nn-tab-bg: #eef0f3;
-  --nn-tab-hover-bg: color-mix(in srgb, var(--el-color-primary) 12%, #eef0f3);
+  --nn-card-bg-hover: color-mix(in srgb, var(--nn-primary) 6%, #f0f1f4);
+  --nn-tab-bg: #f3f4f6;
+  --nn-tab-hover-bg: color-mix(in srgb, var(--nn-primary) 10%, #f3f4f6);
+  --nn-tab-item-hover-bg: #ffffff;
+  --nn-menu-active-bg: #f3f4f6;
   --nn-divider: #e6e8eb;
 
   /* 滚动条（Windows Chrome/Edge/Firefox） */
@@ -112,16 +118,18 @@
 
 html.dark {
   /* 暗色主题主色 */
-  --nn-primary: #1e80ff;
-  --nn-primary-rgb: 30, 128, 255;
-  --el-color-primary: #1e80ff;
-  --el-color-primary-rgb: 30, 128, 255;
-  --el-color-primary-light-3: color-mix(in srgb, #1e80ff 70%, #1a1c20);
-  --el-color-primary-light-5: color-mix(in srgb, #1e80ff 50%, #1a1c20);
-  --el-color-primary-light-7: color-mix(in srgb, #1e80ff 30%, #1a1c20);
-  --el-color-primary-light-8: color-mix(in srgb, #1e80ff 20%, #1a1c20);
-  --el-color-primary-light-9: color-mix(in srgb, #1e80ff 10%, #1a1c20);
-  --el-color-primary-dark-2: color-mix(in srgb, #1e80ff 75%, #fff);
+  --nn-primary: #f1404b;
+  --nn-primary-rgb: 241, 64, 75;
+  --nn-accent: #f1404b;
+  --nn-accent-rgb: 241, 64, 75;
+  --el-color-primary: #f1404b;
+  --el-color-primary-rgb: 241, 64, 75;
+  --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #1a1c20);
+  --el-color-primary-light-5: color-mix(in srgb, #f1404b 50%, #1a1c20);
+  --el-color-primary-light-7: color-mix(in srgb, #f1404b 30%, #1a1c20);
+  --el-color-primary-light-8: color-mix(in srgb, #f1404b 20%, #1a1c20);
+  --el-color-primary-light-9: color-mix(in srgb, #f1404b 10%, #1a1c20);
+  --el-color-primary-dark-2: color-mix(in srgb, #f1404b 75%, #fff);
 
   /* —— 黑夜 —— */
   --nn-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
@@ -134,15 +142,22 @@ html.dark {
 
   --main-shadow: rgba(0, 0, 0, 0.35);
   --nn-sidebar-bg: #1a1c20;
-  --nn-sidebar-glass-bg: var(--nn-section-bg);
+  --nn-sidebar-surface: #1c1f28;
+  --nn-elevated-bg: #1f232c;
+  --nn-elevated-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --nn-elevated-shadow-hover: 0 6px 22px rgba(0, 0, 0, 0.45);
+  --nn-chrome-bg: #1f232c;
+  --nn-chrome-shadow: none;
+  --nn-sidebar-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --nn-sidebar-glass-bg: var(--nn-sidebar-surface);
   --nn-sidebar-glass-border: transparent;
   --nn-sidebar-blur: 0px;
-  --nn-panel-shadow: 0 2px 12px rgba(0, 0, 0, 0.32);
+  --nn-panel-shadow: none;
   --nn-sidebar-pad: 6px;
   --nn-sidebar-logo-bg: #1a1c20;
   --nn-sidebar-logo-text: #ffffff;
   --nn-sidebar-text: rgba(255, 255, 255, 0.78);
-  --nn-sidebar-text-active: #1e80ff;
+  --nn-sidebar-text-active: var(--nn-primary);
   --nn-menu-hover-bg: rgba(255, 255, 255, 0.08);
 
   --nn-header-bg: var(--nn-sidebar-bg);
@@ -152,19 +167,16 @@ html.dark {
   --nn-header-shadow: var(--nn-panel-shadow);
   --nn-header-radius: var(--nn-sidebar-radius);
 
-  --nn-page-bg: #0f1115;
-  --nn-page-dot: rgba(255, 255, 255, 0.1);
-  --nn-page-pattern: radial-gradient(
-    circle at center,
-    var(--nn-page-dot) 1px,
-    transparent 1.2px
-  );
-  --nn-section-bg: #1a1c20;
+  --nn-page-bg: #14161c;
+  --nn-section-bg: #1a1d24;
+  --nn-cat-block-bg: #1a1d24;
   --nn-surface-bg: transparent;
-  --nn-card-bg: #22252b;
-  --nn-card-bg-hover: #282c34;
-  --nn-tab-bg: #252830;
-  --nn-tab-hover-bg: color-mix(in srgb, var(--el-color-primary) 18%, #252830);
+  --nn-card-bg: #22262f;
+  --nn-card-bg-hover: color-mix(in srgb, var(--nn-primary) 10%, #2a2f3a);
+  --nn-tab-bg: #252a34;
+  --nn-tab-hover-bg: color-mix(in srgb, var(--nn-primary) 14%, #252a34);
+  --nn-tab-item-hover-bg: #2a2f3a;
+  --nn-menu-active-bg: #2a2f3a;
   --nn-divider: #2a2e36;
 
   --nn-scrollbar-thumb: #5c6370;
@@ -189,9 +201,6 @@ body {
   font-family: var(--el-font-family);
   color: var(--el-text-color-primary);
   background-color: var(--nn-page-bg);
-  background-image: var(--nn-page-pattern);
-  background-size: var(--nn-page-dot-size) var(--nn-page-dot-size);
-  background-attachment: fixed;
   font-size: var(--el-font-size-base);
   transition:
     background-color var(--nn-transition-slow),
@@ -1122,6 +1131,128 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
 .nn-dialog .el-dialog__footer {
   padding: 16px 20px 20px !important;
   border: 0 !important;
+}
+
+/* 手机端：贴边底部抽屉，表单可滚，操作区固定 */
+@media (max-width: 720px) {
+  .el-overlay-dialog:has(> .nn-dialog) {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+
+  .nn-dialog.el-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: min(92dvh, calc(100% - env(safe-area-inset-top, 0px)));
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .nn-dialog .el-dialog__header {
+    flex-shrink: 0;
+    padding: 16px 16px 6px !important;
+  }
+
+  .nn-dialog .el-dialog__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 6px 16px 8px !important;
+  }
+
+  .nn-dialog .el-dialog__footer {
+    flex-shrink: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    border-top: 1px solid var(--nn-divider, #e6e8eb) !important;
+    background: var(--nn-section-bg) !important;
+  }
+
+  .nn-dlg-head__title {
+    font-size: 17px;
+  }
+
+  .nn-dlg-head__hint {
+    font-size: 12px;
+  }
+
+  .nn-dlg-body {
+    gap: 12px;
+  }
+
+  .nn-dlg-foot {
+    gap: 10px;
+
+    .nn-btn {
+      flex: 1;
+      min-width: 0;
+      height: 42px;
+      font-size: 14px;
+    }
+  }
+
+  .nn-dialog--cat-mgr.el-dialog {
+    max-height: min(94dvh, calc(100% - env(safe-area-inset-top, 0px)));
+    height: min(94dvh, calc(100% - env(safe-area-inset-top, 0px)));
+  }
+
+  .nn-dialog--cat-mgr .el-dialog__body {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 4px 14px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .nn-dialog--cat-mgr .nn-dlg-head__hint--desktop {
+    display: none;
+  }
+
+  .nn-field--url {
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-height: 46px !important;
+    padding: 4px 10px 4px 4px;
+
+    .nn-field__icon {
+      display: none;
+    }
+
+    .nn-seg {
+      flex-shrink: 0;
+      padding: 2px;
+    }
+
+    .nn-seg__btn {
+      padding: 7px 8px;
+      font-size: 12px;
+    }
+
+    .nn-field__input {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 36px;
+      font-size: 16px;
+    }
+  }
+
+  .nn-field,
+  .nn-field--select .el-select__wrapper {
+    min-height: 46px !important;
+  }
+
+  .nn-field__input,
+  .nn-field__textarea {
+    font-size: 16px;
+  }
+
+  .nn-field__textarea {
+    min-height: 64px;
+  }
 }
 
 .nn-select-popper.el-select__popper,

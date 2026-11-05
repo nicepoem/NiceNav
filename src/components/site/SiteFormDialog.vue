@@ -136,7 +136,7 @@ async function submit() {
     width="520px"
     align-center
     destroy-on-close
-    class="nn-dialog"
+    class="nn-dialog nn-dialog--form"
     :show-close="false"
   >
     <template #header>
@@ -169,7 +169,7 @@ async function submit() {
           v-if="!nav.settings.allowThirdPartyMeta"
           class="field-hint meta-privacy-hint"
         >
-          自动识别依赖直连或浏览器扩展；跨域受限时可能无法读取。
+          已关闭第三方识别：需同域 /api/page-meta（pnpm start）或浏览器扩展，否则跨域站点可能读不到。
         </p>
         <div class="nn-field nn-field--url">
           <el-icon class="nn-field__icon" :size="16"><Link /></el-icon>
@@ -180,7 +180,7 @@ async function submit() {
               :class="{ active: urlProtocol === 'https://' }"
               @click="urlProtocol = 'https://'; scheduleFetch(120)"
             >
-              Https
+              https
             </button>
             <button
               type="button"
@@ -188,7 +188,7 @@ async function submit() {
               :class="{ active: urlProtocol === 'http://' }"
               @click="urlProtocol = 'http://'; scheduleFetch(120)"
             >
-              Http
+              http
             </button>
           </div>
           <input
@@ -273,7 +273,9 @@ async function submit() {
 
 <style scoped lang="scss">
 .nn-field--url {
-  padding-right: 6px;
+  flex-wrap: nowrap;
+  padding: 4px 10px 4px 8px;
+  gap: 8px;
 }
 
 .field-hint {

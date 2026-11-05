@@ -51,16 +51,6 @@ import brandLogo from '@/assets/brand/logo.png'
   white-space: nowrap;
 }
 
-/* 侧栏折叠时顶栏品牌区变窄，只保留图标 */
-:global(html.nn-sidebar-narrow) .sidebar-logo {
-  gap: 0;
-  padding: 0;
-}
-
-:global(html.nn-sidebar-narrow) .sidebar-logo__title {
-  display: none;
-}
-
 @media (max-width: 900px) {
   .sidebar-logo {
     justify-content: flex-start;
@@ -77,5 +67,20 @@ import brandLogo from '@/assets/brand/logo.png'
   .sidebar-logo__title {
     font-size: 14px;
   }
+}
+</style>
+
+<!--
+  不可用 scoped 里 :global(html.x) .child —— Vue 会编译成 html.x { … }，
+  把 display:none 绑到整个 html，折叠侧栏时整页黑/白屏。
+-->
+<style lang="scss">
+html.nn-sidebar-narrow .sidebar-logo {
+  gap: 0;
+  padding: 0;
+}
+
+html.nn-sidebar-narrow .sidebar-logo__title {
+  display: none;
 }
 </style>

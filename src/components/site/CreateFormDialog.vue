@@ -128,7 +128,7 @@ async function submit() {
     width="520px"
     align-center
     destroy-on-close
-    class="nn-dialog"
+    class="nn-dialog nn-dialog--form"
     :show-close="false"
   >
     <template #header>
@@ -163,7 +163,7 @@ async function submit() {
               :class="{ active: urlProtocol === 'https://' }"
               @click="urlProtocol = 'https://'; scheduleFetch(120)"
             >
-              Https
+              https
             </button>
             <button
               type="button"
@@ -171,7 +171,7 @@ async function submit() {
               :class="{ active: urlProtocol === 'http://' }"
               @click="urlProtocol = 'http://'; scheduleFetch(120)"
             >
-              Http
+              http
             </button>
           </div>
           <input
@@ -256,7 +256,9 @@ async function submit() {
 
 <style scoped lang="scss">
 .nn-field--url {
-  padding-right: 6px;
+  flex-wrap: nowrap;
+  padding: 4px 10px 4px 8px;
+  gap: 8px;
 }
 
 .meta-fetching {

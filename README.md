@@ -14,8 +14,17 @@ pnpm dev
 - `pnpm dev` — 开发服务器
 - `pnpm build` — 生产构建
 - `pnpm build:extension` — 打包 Chrome / Edge 新标签页扩展（输出到 `extension/dist`）
-- `pnpm preview` — 预览构建产物
+- `pnpm preview` — 预览构建产物（含 `/api/page-meta`）
+- `pnpm start` — 生产静态站 + 同域元数据 API（`dist` + `/api/page-meta`）
 - `pnpm typecheck` — 类型检查
+
+### 部署说明（网址自动识别）
+
+添加网址时的标题/简介识别依赖服务端代抓（浏览器直连多数站点会因 CORS 失败）：
+
+1. **推荐**：`pnpm build && pnpm start`，用 Node 同时提供静态资源与 `/api/page-meta`。
+2. 或用 Nginx 等反代，把 `/api/page-meta`、`/api/icon-probe` 转到上述 Node 服务。
+3. 若只部署纯静态文件，客户端会回退到公开第三方接口（可在设置关闭）。
 
 Chrome 扩展说明见 [`extension/README.md`](extension/README.md)。
 

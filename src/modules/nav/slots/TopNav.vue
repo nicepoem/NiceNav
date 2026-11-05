@@ -33,9 +33,9 @@ const host = inject(NAV_HOST_KEY)
   align-items: center;
   height: var(--nn-header-height);
   border-radius: var(--nn-header-radius, var(--nn-sidebar-radius, 12px));
-  background-color: var(--nn-sidebar-glass-bg, var(--nn-section-bg, #fff));
+  background: var(--nn-chrome-bg, var(--nn-elevated-bg));
   border: none;
-  box-shadow: var(--nn-panel-shadow, var(--nn-header-shadow));
+  box-shadow: var(--nn-chrome-shadow, var(--nn-elevated-shadow));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-sizing: border-box;
@@ -61,7 +61,7 @@ const host = inject(NAV_HOST_KEY)
 
 @media (max-width: 900px) {
   .nav-top-nav {
-    padding: 8px 6px 0;
+    padding: 10px 10px 0;
   }
 
   .nav-top-nav__brand {
@@ -71,6 +71,7 @@ const host = inject(NAV_HOST_KEY)
 
   .nav-top-nav__chrome {
     height: 52px;
+    border-radius: 12px;
   }
 }
 </style>

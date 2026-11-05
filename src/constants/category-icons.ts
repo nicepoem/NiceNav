@@ -142,7 +142,7 @@ export const CATEGORY_ICON_OPTIONS: CategoryIconOption[] = [
   { name: 'mdi:file-pdf-box', label: 'PDF' },
   { name: 'mdi:file-excel', label: '表格' },
   { name: 'mdi:file-word', label: 'Word' },
-  { name: 'mdi:markdown', label: 'Markdown' },
+  { name: 'mdi:language-markdown', label: 'Markdown' },
 
   // 导航 / 社区
   { name: 'mdi:account', label: '用户' },
@@ -173,7 +173,7 @@ export const CATEGORY_ICON_OPTIONS: CategoryIconOption[] = [
   { name: 'mdi:school-outline', label: '学校' },
   { name: 'mdi:certificate', label: '证书' },
   { name: 'mdi:translate', label: '翻译' },
-  { name: 'mdi:dictionary', label: '词典' },
+  { name: 'mdi:book-alphabet', label: '词典' },
   { name: 'mdi:home', label: '生活' },
   { name: 'mdi:home-city', label: '城市' },
   { name: 'mdi:baby-carriage', label: '亲子' },

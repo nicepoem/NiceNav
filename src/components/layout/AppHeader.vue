@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import {
   Plus,
   Rank,
   Check,
   FolderOpened,
-  Search,
 } from '@element-plus/icons-vue'
 import { useNavStore } from '@/stores/nav'
-import { useSearchHotkey } from '@/composables/useSearchHotkey'
-import SearchDialog from '@/components/layout/SearchDialog.vue'
 
 const emit = defineEmits<{
   openMobile: []
@@ -18,26 +15,9 @@ const emit = defineEmits<{
 }>()
 
 const nav = useNavStore()
-const searchOpen = ref(false)
-
-useSearchHotkey({
-  openSearch: () => {
-    searchOpen.value = true
-  },
-  closeSearch: () => {
-    searchOpen.value = false
-    nav.searchQuery = ''
-  },
-  isOpen: () => searchOpen.value,
-  clearLocalQuery: () => {
-    nav.searchQuery = ''
-  },
-})
 
 /** 右侧浮动工具栏开启时，顶栏隐藏对应重复按钮 */
 const dockOn = computed(() => nav.settings.dockEnabled !== false)
-
-const hasQuery = computed(() => Boolean(nav.searchQuery.trim()))
 
 const hasActions = computed(
   () =>
@@ -52,58 +32,43 @@ const hasActions = computed(
   <header class="navbar">
     <div class="navbar__spacer" />
 
-    <div class="navbar__actions">
+    <div v-if="hasActions" class="navbar__actions">
       <button
+        v-if="!dockOn || !nav.settings.dockAddSite"
         type="button"
-        class="search-trigger"
-        :class="{ 'is-active': hasQuery || searchOpen }"
-        title="搜索"
-        aria-label="搜索"
-        @click="searchOpen = true"
+        class="cta-add"
+        @click="emit('addSite')"
       >
-        <el-icon :size="16"><Search /></el-icon>
+        <el-icon :size="16"><Plus /></el-icon>
+        <span class="cta-add__label">添加</span>
       </button>
 
-      <template v-if="hasActions">
-        <button
-          v-if="!dockOn || !nav.settings.dockAddSite"
-          type="button"
-          class="cta-add"
-          @click="emit('addSite')"
-        >
-          <el-icon :size="16"><Plus /></el-icon>
-          <span class="cta-add__label">添加</span>
-        </button>
+      <button
+        v-if="!dockOn || nav.settings.dockManageCategories === false"
+        type="button"
+        class="sort-toggle"
+        title="分类管理"
+        @click="emit('manageCategories')"
+      >
+        <el-icon :size="15"><FolderOpened /></el-icon>
+        <span class="sort-toggle__label">分类</span>
+      </button>
 
-        <button
-          v-if="!dockOn || nav.settings.dockManageCategories === false"
-          type="button"
-          class="sort-toggle"
-          title="分类管理"
-          @click="emit('manageCategories')"
-        >
-          <el-icon :size="15"><FolderOpened /></el-icon>
-          <span class="sort-toggle__label">分类</span>
-        </button>
-
-        <button
-          v-if="!dockOn || !nav.settings.dockSort"
-          type="button"
-          class="sort-toggle"
-          :class="{ 'is-active': nav.editMode }"
-          :aria-pressed="nav.editMode"
-          @click="nav.toggleEditMode()"
-        >
-          <el-icon :size="15">
-            <Check v-if="nav.editMode" />
-            <Rank v-else />
-          </el-icon>
-          <span class="sort-toggle__label">{{ nav.editMode ? '完成' : '排序' }}</span>
-        </button>
-      </template>
+      <button
+        v-if="!dockOn || !nav.settings.dockSort"
+        type="button"
+        class="sort-toggle"
+        :class="{ 'is-active': nav.editMode }"
+        :aria-pressed="nav.editMode"
+        @click="nav.toggleEditMode()"
+      >
+        <el-icon :size="15">
+          <Check v-if="nav.editMode" />
+          <Rank v-else />
+        </el-icon>
+        <span class="sort-toggle__label">{{ nav.editMode ? '完成' : '排序' }}</span>
+      </button>
     </div>
-
-    <SearchDialog v-model="searchOpen" />
   </header>
 </template>
 
@@ -130,35 +95,6 @@ const hasActions = computed(
   gap: 8px;
   flex-shrink: 0;
   margin-left: auto;
-}
-
-.search-trigger {
-  width: 36px;
-  height: 36px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  background: var(--nn-tab-bg);
-  color: var(--el-text-color-regular);
-  cursor: pointer;
-  transition:
-    color var(--nn-transition-fast),
-    background var(--nn-transition-fast),
-    box-shadow var(--nn-transition-fast);
-
-  &:hover {
-    color: var(--nn-primary);
-    background: var(--nn-item-hover-bg);
-  }
-
-  &.is-active {
-    color: var(--nn-primary);
-    background: color-mix(in srgb, var(--nn-primary) 12%, var(--nn-tab-bg));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nn-primary) 28%, transparent);
-  }
 }
 
 .cta-add {
@@ -224,12 +160,6 @@ const hasActions = computed(
 
   .navbar__actions {
     gap: 6px;
-  }
-
-  .search-trigger {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--nn-item-radius);
   }
 
   .cta-add {

@@ -26,9 +26,21 @@ const nav = useNavStore()
 const menuRef = ref<{ $el?: HTMLElement } | null>(null)
 
 const collapsed = computed(() => nav.settings.sidebarCollapsed)
-const activeMenu = computed(() => nav.activeCategoryId ?? '')
 const isWide = computed(() => !collapsed.value || Boolean(props.mobileOpen))
 const canSort = computed(() => isWide.value && nav.editMode)
+
+/** 展开侧栏高亮一级；折叠时父级高亮落到首个子项，便于 sub-menu 识别 active */
+const activeMenu = computed(() => {
+  const id = nav.activeCategoryId
+  if (!id) return ''
+  const cat = nav.categories.find((c) => c.id === id)
+  if (isWide.value) return cat?.parentId || id
+  if (!cat?.parentId) {
+    const node = nav.categoryTree.find((n) => n.id === id)
+    if (node?.children.length) return node.children[0]?.id ?? id
+  }
+  return id
+})
 const collapseTip = computed(() => {
   if (props.mobileOpen) return '收起'
   return collapsed.value ? '展开' : '收起'
@@ -215,11 +227,19 @@ watch(
   },
 )
 
+/** 内容区只有一级 cat-block；点子分类时滚到其父级区块 */
+function sectionIdOf(id: string) {
+  const cat = nav.categories.find((c) => c.id === id)
+  return cat?.parentId || id
+}
+
 function jumpToCategory(id: string) {
   nav.activeCategoryId = id
+  const sectionId = sectionIdOf(id)
   const block =
-    document.querySelector<HTMLElement>(`.cat-block[id="category-${CSS.escape(id)}"]`) ??
-    document.getElementById(`category-${id}`)
+    document.querySelector<HTMLElement>(
+      `.cat-block[id="category-${CSS.escape(sectionId)}"]`,
+    ) ?? document.getElementById(`category-${sectionId}`)
   block?.scrollIntoView({
     behavior: 'smooth',
     block: 'start',
@@ -231,7 +251,7 @@ function onSelect(index: string) {
   jumpToCategory(index)
 }
 
-/** 有子分类时，点击父级标题直接滚到该分类区块，不必先点子分类 */
+/** 折叠侧栏：点父级标题滚到该分类块（子项仍由弹出菜单选择） */
 function onParentClick(id: string, event: MouseEvent) {
   const target = event.target
   if (target instanceof Element && target.closest('.el-menu-item')) return
@@ -289,6 +309,7 @@ async function toggleCollapse() {
       <div class="sidebar-card__body nn-scroll">
         <el-menu
           ref="menuRef"
+          :key="isWide ? 'wide' : 'narrow'"
           :default-active="activeMenu"
           :collapse="true"
           :collapse-transition="false"
@@ -303,8 +324,9 @@ async function toggleCollapse() {
           @select="onSelect"
         >
           <template v-for="node in nav.categoryTree" :key="node.id">
+            <!-- 折叠：有子级用弹出菜单；展开：父级直接可选，子级走内容区 tab -->
             <el-sub-menu
-              v-if="node.children.length"
+              v-if="node.children.length && !isWide"
               :index="node.id"
               class="nn-sortable-cat"
               :data-cat-id="node.id"
@@ -415,7 +437,8 @@ async function toggleCollapse() {
   position: fixed;
   /* 顶对齐分类块 / 贴顶线；底始终钉视口 gap —— 折叠展开同一水平框 */
   top: var(--nn-sidebar-sticky-top, var(--nn-sidebar-gap));
-  left: var(--nn-sidebar-gap);
+  /* 与居中内容区左缘对齐 */
+  left: calc(var(--nn-shell-offset, 0px) + var(--nn-sidebar-gap));
   bottom: var(--nn-sidebar-gap);
   width: var(--nn-drawer-card-width, var(--nn-sidebar-width));
   height: auto;
@@ -425,11 +448,12 @@ async function toggleCollapse() {
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  background-color: var(--nn-sidebar-glass-bg, var(--nn-section-bg, #fff));
+  /* 与 fab / dock 同款浮层芯片 */
+  background: var(--nn-sidebar-surface, var(--nn-elevated-bg, #fff));
   border: none;
   border-radius: var(--nn-sidebar-radius, 12px);
   -webkit-border-radius: var(--nn-sidebar-radius, 12px);
-  box-shadow: var(--nn-panel-shadow, 0 2px 10px rgba(0, 21, 41, 0.08));
+  box-shadow: var(--nn-sidebar-shadow, 0 4px 20px rgba(15, 23, 42, 0.07));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-sizing: border-box;
@@ -510,7 +534,7 @@ async function toggleCollapse() {
 
   &:hover {
     background: var(--nn-menu-hover-bg);
-    color: var(--nn-primary);
+    color: var(--nn-sidebar-text);
   }
 }
 
@@ -628,6 +652,9 @@ async function toggleCollapse() {
   position: relative !important;
   overflow: hidden !important;
   gap: 6px !important;
+  transition:
+    background-color var(--nn-transition-fast),
+    color var(--nn-transition-fast) !important;
 }
 
 :deep(.el-menu--collapse .el-sub-menu__icon-arrow) {
@@ -655,15 +682,15 @@ async function toggleCollapse() {
 :deep(.el-menu--collapse > .el-menu-item.is-active > .el-tooltip__trigger),
 :deep(.el-menu--collapse > .el-menu-item.is-active > .el-menu-tooltip__trigger),
 :deep(.el-menu--collapse > .el-sub-menu.is-active > .el-sub-menu__title) {
-  background-color: var(--nn-menu-hover-bg) !important;
+  background-color: var(--nn-menu-active-bg, var(--nn-menu-hover-bg)) !important;
   color: var(--nn-primary) !important;
 }
 
-:deep(.el-menu--collapse > .el-menu-item:hover > .el-tooltip__trigger),
-:deep(.el-menu--collapse > .el-menu-item:hover > .el-menu-tooltip__trigger),
-:deep(.el-menu--collapse > .el-sub-menu > .el-sub-menu__title:hover) {
+:deep(.el-menu--collapse > .el-menu-item:hover:not(.is-active) > .el-tooltip__trigger),
+:deep(.el-menu--collapse > .el-menu-item:hover:not(.is-active) > .el-menu-tooltip__trigger),
+:deep(.el-menu--collapse > .el-sub-menu:not(.is-active) > .el-sub-menu__title:hover) {
   background-color: var(--nn-menu-hover-bg) !important;
-  color: var(--nn-primary) !important;
+  color: var(--nn-sidebar-text) !important;
 }
 
 .sidebar-rail:not(.is-collapsed),
@@ -703,8 +730,8 @@ async function toggleCollapse() {
 .sidebar-fab {
   display: none;
   position: fixed;
-  left: 10px;
-  bottom: 20px;
+  left: calc(var(--nn-shell-offset, 0px) + 10px);
+  bottom: 20px; /* 与右侧 .float-dock 同底边 */
   z-index: 95;
   width: 44px;
   height: 44px;
@@ -714,14 +741,8 @@ async function toggleCollapse() {
   place-items: center;
   cursor: pointer;
   color: var(--el-text-color-regular);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--nn-section-bg) 88%, #fff) 0%,
-    var(--nn-tab-bg) 100%
-  );
-  box-shadow:
-    0 2px 8px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: var(--nn-elevated-bg);
+  box-shadow: var(--nn-elevated-shadow);
   transition:
     transform var(--nn-transition-fast),
     box-shadow var(--nn-transition-fast),
@@ -733,6 +754,7 @@ async function toggleCollapse() {
 
   &:hover {
     color: var(--nn-primary);
+    box-shadow: var(--nn-elevated-shadow-hover);
   }
 }
 

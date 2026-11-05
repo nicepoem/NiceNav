@@ -268,6 +268,19 @@ function clear() {
   padding: 2px;
 }
 
+@media (max-width: 720px) {
+  .icon-picker__grid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    max-height: min(48dvh, 360px);
+    gap: 6px;
+  }
+
+  .icon-option {
+    padding: 12px 4px;
+    min-height: 64px;
+  }
+}
+
 .icon-option {
   display: flex;
   flex-direction: column;

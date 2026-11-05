@@ -11,9 +11,6 @@ importers:
       '@element-plus/icons-vue':
         specifier: ^2.3.1
         version: 2.3.2(vue@3.5.44(typescript@5.8.3))
-      '@iconify-json/mdi':
-        specifier: ^1.2.3
-        version: 1.2.3
       '@iconify/vue':
         specifier: ^5.0.3
         version: 5.0.3(vue@3.5.44(typescript@5.8.3))
@@ -42,6 +39,9 @@ importers:
       '@eslint/js':
         specifier: ^9.22.0
         version: 9.39.5
+      '@iconify-json/mdi':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@types/node':
         specifier: ^24.13.3
         version: 24.19.2

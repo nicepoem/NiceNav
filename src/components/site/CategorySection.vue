@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CategoryTreeNode, Site } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
 import { collectSortIds, useSortable } from '@/composables/useSortable'
@@ -34,6 +34,46 @@ const tabIds = computed(() => new Set(tabs.value.map((t) => t.id)))
 const activeTabId = ref('')
 const cardsEl = ref<HTMLElement | null>(null)
 const tabsEl = ref<HTMLElement | null>(null)
+const pillStyle = ref({
+  width: '0px',
+  height: '0px',
+  transform: 'translate3d(0,0,0)',
+  opacity: '0',
+})
+let pillRaf = 0
+let pillRo: ResizeObserver | null = null
+
+function updateTabPill() {
+  const root = tabsEl.value
+  if (!root || !activeTabId.value) {
+    pillStyle.value = {
+      width: '0px',
+      height: '0px',
+      transform: 'translate3d(0,0,0)',
+      opacity: '0',
+    }
+    return
+  }
+  const tab = root.querySelector<HTMLElement>(`.cat-tab[data-id="${CSS.escape(activeTabId.value)}"]`)
+  if (!tab) {
+    pillStyle.value = { ...pillStyle.value, opacity: '0' }
+    return
+  }
+  pillStyle.value = {
+    width: `${tab.offsetWidth}px`,
+    height: `${tab.offsetHeight}px`,
+    transform: `translate3d(${tab.offsetLeft}px, ${tab.offsetTop}px, 0)`,
+    opacity: '1',
+  }
+}
+
+function schedulePillUpdate() {
+  if (pillRaf) cancelAnimationFrame(pillRaf)
+  pillRaf = requestAnimationFrame(() => {
+    pillRaf = 0
+    updateTabPill()
+  })
+}
 
 function ensureValidTab() {
   if (!hasChildren.value) {
@@ -58,8 +98,12 @@ watch(
 watch(
   () => nav.activeCategoryId,
   (active, prev) => {
-    if (!hasChildren.value) return
-    if (active && children.value.some((c) => c.id === active)) {
+    if (!hasChildren.value || !active) return
+    // 与本块无关的滚动定位不处理，减少全列表 watcher 开销
+    const related =
+      active === props.node.id || children.value.some((c) => c.id === active)
+    if (!related) return
+    if (children.value.some((c) => c.id === active)) {
       activeTabId.value = active
       return
     }
@@ -104,13 +148,45 @@ function scrollActiveTabIntoView(behavior: ScrollBehavior = 'smooth') {
 }
 
 watch(activeTabId, () => {
-  void nextTick(() => scrollActiveTabIntoView('smooth'))
+  void nextTick(() => {
+    schedulePillUpdate()
+    scrollActiveTabIntoView('smooth')
+  })
 })
+
+watch(
+  () => tabs.value.map((t) => t.id).join(','),
+  () => void nextTick(schedulePillUpdate),
+)
 
 function selectTab(id: string) {
   activeTabId.value = id
   nav.activeCategoryId = id
 }
+
+function onTabsScroll() {
+  schedulePillUpdate()
+}
+
+onMounted(() => {
+  void nextTick(schedulePillUpdate)
+  if (typeof ResizeObserver !== 'undefined') {
+    pillRo = new ResizeObserver(() => schedulePillUpdate())
+    if (tabsEl.value) pillRo.observe(tabsEl.value)
+  }
+})
+
+watch(tabsEl, (el, prev) => {
+  if (prev && pillRo) pillRo.unobserve(prev)
+  if (el && pillRo) pillRo.observe(el)
+  schedulePillUpdate()
+})
+
+onBeforeUnmount(() => {
+  if (pillRaf) cancelAnimationFrame(pillRaf)
+  pillRo?.disconnect()
+  pillRo = null
+})
 
 useSortable(
   cardsEl,
@@ -165,7 +241,9 @@ useSortable(
         ref="tabsEl"
         class="cat-tabs"
         :class="{ 'is-sortable': canReorder }"
+        @scroll.passive="onTabsScroll"
       >
+        <span class="cat-tabs__pill" :style="pillStyle" aria-hidden="true" />
         <button
           v-for="tab in tabs"
           :id="`category-${tab.id}`"
@@ -181,45 +259,49 @@ useSortable(
       </div>
     </div>
 
-    <div
-      v-if="displaySites.length"
-      ref="cardsEl"
-      class="cat-cards"
-      :class="{ 'is-sortable': canReorder }"
-    >
-      <SiteCard
-        v-for="site in displaySites"
-        :key="site.id"
-        :site="site"
-        :sortable="canReorder"
-        @open="nav.openSite"
-        @edit="emit('editSite', $event)"
-        @remove="emit('removeSite', $event)"
+    <Transition name="cat-pane" mode="out-in">
+      <div
+        v-if="displaySites.length"
+        :key="activeCategory?.id || 'empty'"
+        ref="cardsEl"
+        class="cat-cards"
+        :class="{ 'is-sortable': canReorder }"
+      >
+        <SiteCard
+          v-for="site in displaySites"
+          :key="site.id"
+          :site="site"
+          :sortable="canReorder"
+          @open="nav.openSite"
+          @edit="emit('editSite', $event)"
+          @remove="emit('removeSite', $event)"
+        />
+      </div>
+      <el-empty
+        v-else
+        :key="`empty-${activeCategory?.id || 'none'}`"
+        description="该分类暂无网址"
+        :image-size="64"
       />
-    </div>
-    <el-empty
-      v-else
-      description="该分类暂无网址"
-      :image-size="64"
-    />
+    </Transition>
   </section>
 </template>
 
 <style scoped lang="scss">
 .cat-block {
   scroll-margin-top: calc(
-    var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-sidebar-gap)
+    var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-glass-band, 148px)
   );
-  background: var(--nn-section-bg);
+  background: var(--nn-cat-block-bg, #ffffff70);
   border-radius: var(--nn-sidebar-radius, 16px);
-  padding: 8px 10px 10px;
+  padding: 12px 16px 14px;
 }
 
 .cat-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
 .cat-block__heading {
@@ -227,10 +309,10 @@ useSortable(
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 650;
   line-height: 1.2;
-  color: var(--el-text-color-primary);
+  color: var(--nn-sidebar-text, var(--el-text-color-regular));
 }
 
 .cat-block__name {
@@ -238,17 +320,34 @@ useSortable(
 }
 
 .cat-tabs {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
-  padding: 2px;
-  border-radius: 6px;
-  background: var(--nn-tab-bg, #eef0f3);
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--nn-tab-bg, #f3f4f6);
   box-sizing: border-box;
+}
+
+.cat-tabs__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 6px;
+  background: var(--nn-primary);
+  pointer-events: none;
+  will-change: transform, width, height;
+  transition:
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
 }
 
 .cat-tabs.is-sortable .cat-tab {
@@ -260,33 +359,52 @@ useSortable(
 }
 
 .cat-tab {
+  position: relative;
+  z-index: 1;
   border: 0;
   background: transparent;
   color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 1.2;
-  padding: 4px 8px;
+  font-size: 14px;
+  line-height: 1.3;
+  padding: 7px 14px;
   margin: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
   transition:
-    background var(--nn-transition-fast),
-    color var(--nn-transition-fast);
+    color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 
   &:hover:not(.active) {
-    background: var(--nn-section-bg, #fff);
-    color: var(--el-text-color-secondary);
+    color: var(--el-text-color-primary);
+    background: var(--nn-tab-item-hover-bg, #fff);
   }
 
   &.active {
-    background: var(--nn-primary);
     color: #fff;
     font-weight: 600;
   }
+}
+
+.cat-pane-enter-active,
+.cat-pane-leave-active {
+  transition:
+    opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cat-pane-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.cat-pane-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .cat-cards {

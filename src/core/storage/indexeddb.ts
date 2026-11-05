@@ -6,7 +6,6 @@ import {
   SEED_VERSION,
   stripUnusedHeaderMenus,
 } from '../defaults'
-import { createSeedData } from '../demo-catalog'
 import type { AppSettings, Category, NavData, Site } from '../types'
 import { clonePlain } from './clone'
 import type { NavStorage } from './types'
@@ -39,7 +38,9 @@ export class IndexedDbStorage implements NavStorage {
     this.db = new NiceNavDatabase(dbName)
   }
 
-  private async writeSeed(seed = createSeedData()) {
+  private async writeSeed() {
+    const { createSeedData } = await import('../demo-catalog')
+    const seed = createSeedData()
     await this.db.transaction('rw', this.db.categories, this.db.sites, this.db.meta, async () => {
       await this.db.categories.clear()
       await this.db.sites.clear()
@@ -122,6 +123,18 @@ export class IndexedDbStorage implements NavStorage {
   async putSite(site: Site): Promise<void> {
     await this.ensureSeed()
     await this.db.sites.put(clonePlain(site))
+  }
+
+  async putCategories(categories: Category[]): Promise<void> {
+    if (!categories.length) return
+    await this.ensureSeed()
+    await this.db.categories.bulkPut(clonePlain(categories))
+  }
+
+  async putSites(sites: Site[]): Promise<void> {
+    if (!sites.length) return
+    await this.ensureSeed()
+    await this.db.sites.bulkPut(clonePlain(sites))
   }
 
   async removeCategory(id: string): Promise<void> {

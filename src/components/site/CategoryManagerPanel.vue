@@ -496,7 +496,10 @@ defineExpose({ resetForm })
       </div>
     </form>
 
-    <p class="cat-mgr__tip">拖拽排序；子分类向左拖可升为一级，一级向右拖可挂到上方分类下</p>
+    <p class="cat-mgr__tip">
+      <span class="cat-mgr__tip-full">拖拽排序；子分类向左拖可升为一级，一级向右拖可挂到上方分类下</span>
+      <span class="cat-mgr__tip-short">按住左侧图标拖拽排序，左右滑调整层级</span>
+    </p>
 
     <div v-if="!rows.length" class="cat-mgr__empty">
       暂无分类，在上方填写名称后添加
@@ -519,7 +522,7 @@ defineExpose({ resetForm })
           title="拖拽排序，左右调整层级"
           aria-label="拖拽排序"
         >
-          <el-icon :size="16"><Rank /></el-icon>
+          <el-icon :size="18"><Rank /></el-icon>
         </span>
 
         <NavIcon :icon="categoryOf(row.id)?.icon" :size="row.depth ? 16 : 18" />
@@ -535,7 +538,7 @@ defineExpose({ resetForm })
             aria-label="添加子分类"
             @click="startAddChild(categoryOf(row.id)!)"
           >
-            <el-icon :size="15"><Plus /></el-icon>
+            <el-icon :size="16"><Plus /></el-icon>
           </button>
           <button
             v-if="categoryOf(row.id)"
@@ -545,7 +548,7 @@ defineExpose({ resetForm })
             aria-label="编辑"
             @click="startEdit(categoryOf(row.id)!)"
           >
-            <el-icon :size="15"><Edit /></el-icon>
+            <el-icon :size="16"><Edit /></el-icon>
           </button>
           <button
             v-if="categoryOf(row.id)"
@@ -555,7 +558,7 @@ defineExpose({ resetForm })
             aria-label="删除"
             @click="removeCategory(categoryOf(row.id)!)"
           >
-            <el-icon :size="15"><Delete /></el-icon>
+            <el-icon :size="16"><Delete /></el-icon>
           </button>
         </div>
       </div>
@@ -611,6 +614,10 @@ defineExpose({ resetForm })
   color: var(--el-text-color-secondary);
 }
 
+.cat-mgr__tip-short {
+  display: none;
+}
+
 .cat-mgr__empty {
   flex: 1;
   display: grid;
@@ -630,6 +637,14 @@ defineExpose({ resetForm })
   padding: 6px 8px 6px 6px;
   border-radius: var(--nn-item-radius, 8px);
   background: var(--nn-item-hover-bg, #f5f6f8);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
 }
 
 .cat-mgr__row {
@@ -748,15 +763,116 @@ defineExpose({ resetForm })
   gap: 8px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
+  .cat-mgr {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    gap: 10px;
+  }
+
+  .cat-mgr__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .cat-mgr__toolbar-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cat-mgr__name-field {
+    grid-column: 1 / -1;
+    flex: none;
+    min-width: 0;
+    min-height: 46px;
+  }
+
+  .cat-mgr__parent-field {
+    flex: none;
+    width: auto;
+    min-width: 0;
+    min-height: 46px;
+  }
+
+  :deep(.icon-picker.is-compact .preview-box) {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+
   .cat-mgr__toolbar-actions {
     margin-left: 0;
     width: 100%;
-    justify-content: flex-end;
+
+    .nn-btn {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      font-size: 15px;
+    }
+  }
+
+  .cat-mgr__tip-full {
+    display: none;
+  }
+
+  .cat-mgr__tip-short {
+    display: inline;
   }
 
   .cat-mgr__meta {
     display: none;
+  }
+
+  .cat-mgr__empty {
+    flex: 1;
+    min-height: 160px;
+  }
+
+  .cat-mgr__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    padding: 8px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .cat-mgr__row {
+    min-height: 48px;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 6px 6px 6px 2px;
+
+    &.is-child {
+      min-height: 44px;
+      padding-left: 22px;
+    }
+  }
+
+  .cat-mgr__handle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .cat-mgr__name {
+    font-size: 15px;
+  }
+
+  .cat-mgr__actions {
+    opacity: 1;
+    gap: 2px;
+  }
+
+  .cat-mgr__icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
   }
 }
 </style>

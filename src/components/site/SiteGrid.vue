@@ -83,14 +83,14 @@ onUnmounted(() => observer?.disconnect())
   display: flex;
   flex-direction: column;
   gap: 18px;
-  /* 左右与顶栏 chrome 对齐：右 = sidebar-gap；左由侧栏 rail 承担 */
-  padding: var(--nn-sidebar-gap) var(--nn-sidebar-gap) 48px 0;
+  /* 顶距由玻璃带承担；左右与顶栏 chrome 对齐 */
+  padding: 0 var(--nn-sidebar-gap) 48px 0;
   box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
   .grid-wrap {
-    padding: 8px 6px 36px;
+    padding: 0 6px 36px;
     gap: 12px;
   }
 }

@@ -104,7 +104,8 @@ export function initSiteIconCache() {
   hydrateFromDisk()
 }
 
-function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
+/** 浏览器 Image 探测（生产 / 无代理时）；失败会在 Network 留下记录 */
+function probeWithImage(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const timer = window.setTimeout(() => {
@@ -115,7 +116,6 @@ function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
     }, timeoutMs)
     img.onload = () => {
       window.clearTimeout(timer)
-      // 0x0 视为无效
       if (img.naturalWidth < 2 || img.naturalHeight < 2) {
         reject(new Error('empty'))
         return
@@ -130,6 +130,35 @@ function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
     img.decoding = 'async'
     img.src = url
   })
+}
+
+type DevProbeResult = { kind: 'ok' } | { kind: 'miss' } | { kind: 'proxy-down' }
+
+/** 开发态走同源代理，404/CORP 不进浏览器控制台 */
+async function probeViaDevProxy(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<DevProbeResult> {
+  const ctrl = new AbortController()
+  const timer = window.setTimeout(() => ctrl.abort(), timeoutMs + 400)
+  try {
+    const res = await fetch(`/api/icon-probe?url=${encodeURIComponent(url)}`, {
+      signal: ctrl.signal,
+      cache: 'no-store',
+    })
+    if (!res.ok) return { kind: 'proxy-down' }
+    const data = (await res.json()) as { ok?: boolean }
+    return data.ok ? { kind: 'ok' } : { kind: 'miss' }
+  } catch {
+    return { kind: 'proxy-down' }
+  } finally {
+    window.clearTimeout(timer)
+  }
+}
+
+async function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
+  // 有同源 /api/icon-probe 时优先走代理，避免控制台 404/CORP；代理不可用再退回 Image
+  const result = await probeViaDevProxy(url, timeoutMs)
+  if (result.kind === 'ok') return url
+  if (result.kind === 'miss') throw new Error('unavailable')
+  return probeWithImage(url, timeoutMs)
 }
 
 /** 按顺序逐个请求，当前源失败或超时后再试下一个 */

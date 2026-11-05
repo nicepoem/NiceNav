@@ -1,13 +1,11 @@
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import {
-  applyImport,
   buildCategoryTree,
   buildSearchEngineUrl,
   createId,
-  createSeedData,
+  DEFAULT_SETTINGS,
   downloadExportFilename,
-  exportToJson,
   filterSites,
   flattenCategoryTree,
   getDescendantIds,
@@ -22,7 +20,6 @@ import {
   type ImportMode,
   type NavStorage,
   type Site,
-  validateImportJson,
 } from '@nice-nav/core'
 import { clearSiteIconHostCache, preconnectIconOrigins } from '@/utils/site-icon'
 
@@ -34,7 +31,9 @@ const tabId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 
 export const useNavStore = defineStore('nav', () => {
   const categories = ref<Category[]>([])
   const sites = ref<Site[]>([])
-  const settings = ref<AppSettings>(createSeedData().settings)
+  const settings = ref<AppSettings>({ ...DEFAULT_SETTINGS })
+  /** 图标覆盖层：避免每张 favicon 回写触发 sites 全表重算 */
+  const iconOverrides = shallowRef(new Map<string, string>())
   const loading = ref(false)
   const ready = ref(false)
   /** IndexedDB 不可用时为 true，已降级到内存存储 */
@@ -44,6 +43,9 @@ export const useNavStore = defineStore('nav', () => {
   const activeCategoryId = ref<string | null>(null)
   /** 会话级：仅编辑模式下显示拖拽手柄并允许排序 */
   const editMode = ref(false)
+
+  let iconFlushTimer: ReturnType<typeof setTimeout> | null = null
+  const pendingIconWrites = new Map<string, Site>()
 
   let syncChannel: BroadcastChannel | null = null
   /** >0 时忽略向外广播，避免远端 hydrate 回声 */
@@ -161,11 +163,20 @@ export const useNavStore = defineStore('nav', () => {
     return siblings.reduce((max, s) => Math.max(max, s.order), -1) + 1
   }
 
+  function resolveSiteIcon(site: Site) {
+    if (iconOverrides.value.has(site.id)) {
+      return iconOverrides.value.get(site.id) || undefined
+    }
+    return site.icon
+  }
+
   async function hydrate() {
     const data = await storage.getAll()
     categories.value = data.categories
     sites.value = data.sites
     settings.value = data.settings
+    iconOverrides.value = new Map()
+    pendingIconWrites.clear()
     if (settings.value.allowThirdPartyFavicon) {
       preconnectIconOrigins()
     }
@@ -305,10 +316,24 @@ export const useNavStore = defineStore('nav', () => {
     notifyOtherTabs()
   }
 
+  async function flushPendingIcons() {
+    if (!pendingIconWrites.size) return
+    const batch = [...pendingIconWrites.values()]
+    pendingIconWrites.clear()
+    await storage.putSites(batch)
+  }
+
+  function scheduleIconFlush() {
+    if (iconFlushTimer != null) return
+    iconFlushTimer = setTimeout(() => {
+      iconFlushTimer = null
+      void flushPendingIcons()
+    }, 420)
+  }
+
   /**
    * 回写站点图标。默认不覆盖已有 icon（用于自动探测补全）。
-   * overwrite 时可清空或替换失效地址。
-   * 不广播到其他标签，避免首屏探测引发 hydrate 风暴；其它标签自行探测或下次整库同步即可。
+   * 先写覆盖层，批量落库，避免触发 sitesByCategory 全量重算。
    */
   async function patchSiteIcon(
     id: string,
@@ -318,17 +343,23 @@ export const useNavStore = defineStore('nav', () => {
     const trimmed = icon.trim()
     const safeIcon = trimmed ? sanitizeIconUrl(trimmed) : null
     if (trimmed && !safeIcon) return
-    const idx = sites.value.findIndex((s) => s.id === id)
-    if (idx < 0) return
-    const current = sites.value[idx]!
-    if (!opts?.overwrite && current.icon?.trim()) return
+    const current = sites.value.find((s) => s.id === id)
+    if (!current) return
+    const existing = resolveSiteIcon(current)?.trim()
+    if (!opts?.overwrite && existing) return
+
+    const nextMap = new Map(iconOverrides.value)
+    if (safeIcon) nextMap.set(id, safeIcon)
+    else nextMap.set(id, '')
+    iconOverrides.value = nextMap
+
     const next: Site = {
       ...current,
       icon: safeIcon || undefined,
       updatedAt: Date.now(),
     }
-    sites.value[idx] = next
-    await storage.putSite(next)
+    pendingIconWrites.set(id, next)
+    scheduleIconFlush()
   }
 
   /** 同级分类重排（parentId 为 null 表示根级） */
@@ -336,16 +367,17 @@ export const useNavStore = defineStore('nav', () => {
     if (!orderedIds.length) return
     const now = Date.now()
     const orderMap = new Map(orderedIds.map((id, i) => [id, i]))
+    const changed: Category[] = []
     const next = categories.value.map((c) => {
       if (!sameParent(c, parentId)) return c
       const order = orderMap.get(c.id)
       if (order === undefined) return c
-      return { ...c, order, updatedAt: now }
+      const updated = { ...c, order, updatedAt: now }
+      changed.push(updated)
+      return updated
     })
     categories.value = next
-    await Promise.all(
-      next.filter((c) => orderMap.has(c.id)).map((c) => storage.putCategory(c)),
-    )
+    await storage.putCategories(changed)
     notifyOtherTabs()
   }
 
@@ -372,7 +404,7 @@ export const useNavStore = defineStore('nav', () => {
     })
     if (!changed.length) return
     categories.value = next
-    await Promise.all(changed.map((c) => storage.putCategory(c)))
+    await storage.putCategories(changed)
     notifyOtherTabs()
   }
 
@@ -381,16 +413,17 @@ export const useNavStore = defineStore('nav', () => {
     if (!orderedIds.length) return
     const now = Date.now()
     const orderMap = new Map(orderedIds.map((id, i) => [id, i]))
+    const changed: Site[] = []
     const next = sites.value.map((s) => {
       if (s.categoryId !== categoryId) return s
       const order = orderMap.get(s.id)
       if (order === undefined) return s
-      return { ...s, order, updatedAt: now }
+      const updated = { ...s, order, updatedAt: now }
+      changed.push(updated)
+      return updated
     })
     sites.value = next
-    await Promise.all(
-      next.filter((s) => orderMap.has(s.id)).map((s) => storage.putSite(s)),
-    )
+    await storage.putSites(changed)
     notifyOtherTabs()
   }
 
@@ -406,10 +439,17 @@ export const useNavStore = defineStore('nav', () => {
     notifyOtherTabs()
   }
 
-  function exportBackup(): string {
+  async function exportBackup() {
+    await flushPendingIcons()
+    const { exportToJson } = await import('@/core/import-export')
+    const mergedSites = sites.value.map((s) => {
+      if (!iconOverrides.value.has(s.id)) return s
+      const icon = iconOverrides.value.get(s.id)
+      return { ...s, icon: icon || undefined }
+    })
     const json = exportToJson({
       categories: categories.value,
-      sites: sites.value,
+      sites: mergedSites,
       settings: settings.value,
     })
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
@@ -423,12 +463,13 @@ export const useNavStore = defineStore('nav', () => {
   }
 
   async function importBackup(raw: string, mode: ImportMode) {
+    const { validateImportJson, applyImport } = await import('@/core/import-export')
     const validated = validateImportJson(raw)
     if (!validated.ok) {
       throw new Error(validated.error)
     }
     try {
-      // 传入纯数据，避免合并后残留 Vue Proxy 无法写入 IndexedDB
+      await flushPendingIcons()
       const { data, result } = applyImport(
         {
           categories: JSON.parse(JSON.stringify(categories.value)) as Category[],
@@ -442,6 +483,7 @@ export const useNavStore = defineStore('nav', () => {
       categories.value = data.categories
       sites.value = data.sites
       settings.value = data.settings
+      iconOverrides.value = new Map()
       notifyOtherTabs()
       return result
     } catch (e) {
@@ -451,11 +493,13 @@ export const useNavStore = defineStore('nav', () => {
   }
 
   async function clearAll() {
+    await flushPendingIcons()
     await storage.clear()
     clearSiteIconHostCache()
     categories.value = []
     sites.value = []
-    settings.value = createSeedData().settings
+    settings.value = { ...DEFAULT_SETTINGS }
+    iconOverrides.value = new Map()
     await persistAll()
     notifyOtherTabs()
   }
@@ -478,6 +522,7 @@ export const useNavStore = defineStore('nav', () => {
     categories,
     sites,
     settings,
+    iconOverrides,
     loading,
     ready,
     usingMemoryFallback,
@@ -494,6 +539,7 @@ export const useNavStore = defineStore('nav', () => {
     rootCategories,
     childrenOf,
     isChildCategory,
+    resolveSiteIcon,
     init,
     hydrate,
     upsertCategory,

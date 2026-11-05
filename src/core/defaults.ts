@@ -105,7 +105,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   openInNewTab: true,
   sidebarCollapsed: false,
-  allowThirdPartyMeta: false,
+  // 生产静态托管无同域代抓时需要；有 pnpm start / 反代时可在设置关闭
+  allowThirdPartyMeta: true,
   allowThirdPartyFavicon: false,
   dockEnabled: true,
   dockBackTop: true,
@@ -158,7 +159,7 @@ export function normalizeAppSettings(
     theme: raw.theme ?? DEFAULT_SETTINGS.theme,
     openInNewTab: raw.openInNewTab ?? DEFAULT_SETTINGS.openInNewTab,
     sidebarCollapsed: raw.sidebarCollapsed ?? DEFAULT_SETTINGS.sidebarCollapsed,
-    allowThirdPartyMeta: raw.allowThirdPartyMeta === true,
+    allowThirdPartyMeta: raw.allowThirdPartyMeta !== false,
     allowThirdPartyFavicon: raw.allowThirdPartyFavicon === true,
     dockEnabled: raw.dockEnabled !== false,
     dockBackTop: raw.dockBackTop !== false,

@@ -85,7 +85,7 @@ async function submit() {
     width="560px"
     align-center
     destroy-on-close
-    class="nn-dialog"
+    class="nn-dialog nn-dialog--form"
     :show-close="false"
   >
     <template #header>

@@ -131,9 +131,9 @@ onBeforeUnmount(() => {
 .search-dialog__panel {
   width: min(920px, calc(100vw - 40px));
   padding: 8px;
-  border-radius: 16px;
-  background: var(--nn-section-bg, #fff);
-  box-shadow: 0 20px 50px rgba(15, 40, 80, 0.22);
+  border-radius: 12px;
+  background: var(--nn-elevated-bg, var(--nn-section-bg, #fff));
+  box-shadow: var(--nn-elevated-shadow, 0 20px 50px rgba(15, 40, 80, 0.22));
   box-sizing: border-box;
   overflow: visible;
 }
@@ -142,7 +142,7 @@ onBeforeUnmount(() => {
   min-height: 52px;
   padding: 6px 8px 6px 10px;
   background: var(--nn-tab-bg, #f2f4f7);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: none;
 
   &:focus-within {

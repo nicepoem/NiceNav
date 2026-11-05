@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useNavStore } from '@/stores/nav'
 import { useTheme } from '@/composables/useTheme'
+import PageSkeleton from '@/components/layout/PageSkeleton.vue'
 
 const nav = useNavStore()
 const { initTheme } = useTheme()
@@ -25,6 +26,7 @@ function reload() {
       重新加载
     </button>
   </div>
+  <PageSkeleton v-else-if="!nav.ready" />
   <template v-else>
     <div v-if="nav.usingMemoryFallback" class="boot-banner" role="status">
       本地数据库不可用，已使用内存模式；刷新页面后数据会丢失。

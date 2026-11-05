@@ -93,11 +93,11 @@ function asMeta(data: Partial<PageMeta> | null | undefined): PageMeta | null {
   return meta.title || meta.description || meta.icon ? meta : null
 }
 
-async function fetchViaDevProxy(
+/** 同源 /api/page-meta（开发 Vite、preview、pnpm start 均提供） */
+async function fetchViaSameOriginProxy(
   url: string,
   signal?: AbortSignal,
 ): Promise<PageMeta | null> {
-  if (!import.meta.env.DEV) return null
   const controller = new AbortController()
   const onAbort = () => controller.abort()
   signal?.addEventListener('abort', onAbort, { once: true })
@@ -226,11 +226,11 @@ async function fetchViaMicrolink(
   }
 }
 
-async function fetchViaAllOrigins(
+async function fetchViaHtmlProxy(
+  endpoint: string,
   url: string,
   signal?: AbortSignal,
 ): Promise<PageMeta | null> {
-  const endpoint = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
   const controller = new AbortController()
   const unlink = linkAbort(signal, controller)
   const timer = window.setTimeout(() => controller.abort(), 10000)
@@ -246,6 +246,28 @@ async function fetchViaAllOrigins(
     window.clearTimeout(timer)
     unlink()
   }
+}
+
+async function fetchViaAllOrigins(
+  url: string,
+  signal?: AbortSignal,
+): Promise<PageMeta | null> {
+  return fetchViaHtmlProxy(
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url,
+    signal,
+  )
+}
+
+async function fetchViaCorsDev(
+  url: string,
+  signal?: AbortSignal,
+): Promise<PageMeta | null> {
+  return fetchViaHtmlProxy(
+    `https://proxy.cors.dev/raw?url=${encodeURIComponent(url)}`,
+    url,
+    signal,
+  )
 }
 
 function metaScore(meta: PageMeta): number {
@@ -314,7 +336,8 @@ export type FetchPageMetaOptions = {
 
 /**
  * 输入链接后自动获取标题与简介。
- * 默认：开发代抓 / 扩展后台 / 直连；可选再并行第三方公开接口。
+ * 优先：同源 /api/page-meta → 扩展 → 直连；
+ * 生产环境或显式开启时再并行第三方公开接口（纯静态托管的兜底）。
  */
 export async function fetchPageMeta(
   url: string,
@@ -338,7 +361,7 @@ export async function fetchPageMeta(
   const abort = new AbortController()
   const signal = abort.signal
   const tasks: Array<Promise<PageMeta | null>> = [
-    fetchViaDevProxy(url, signal),
+    fetchViaSameOriginProxy(url, signal),
     fetchViaExtension(url),
     withTimeout(
       fetchHtmlDirect(url, signal).then((html) =>
@@ -347,9 +370,15 @@ export async function fetchPageMeta(
       3500,
     ),
   ]
-  if (options?.allowThirdParty) {
-    tasks.push(fetchViaMicrolink(url, signal), fetchViaAllOrigins(url, signal))
+  // 生产无 Node 同域 API 时几乎只能靠第三方；开发也可在设置中开启
+  const useThirdParty = options?.allowThirdParty === true || import.meta.env.PROD
+  if (useThirdParty) {
+    tasks.push(
+      fetchViaMicrolink(url, signal),
+      fetchViaAllOrigins(url, signal),
+      fetchViaCorsDev(url, signal),
+    )
   }
 
-  return bestMeta(tasks, fallback, abort)
+  return bestMeta(tasks, fallback, abort, useThirdParty ? 8000 : 2600)
 }

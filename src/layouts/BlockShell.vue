@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
+import PageGlassBackdrop from '@/components/layout/PageGlassBackdrop.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -47,8 +48,18 @@ const showFooter = computed(() => has('footer'))
       <slot name="topNav" />
     </header>
 
-    <div v-if="showTopFull" class="block-shell__top-full">
-      <slot name="topFull" />
+    <!-- 顶栏下：玻璃装饰 + 主搜索栏 -->
+    <div
+      v-if="has('topNav') || showTopFull"
+      class="block-shell__hero"
+      :class="{ 'has-search': showTopFull }"
+    >
+      <div class="block-shell__glass-band" aria-hidden="true">
+        <PageGlassBackdrop />
+      </div>
+      <div v-if="showTopFull" class="block-shell__hero-search">
+        <slot name="topFull" />
+      </div>
     </div>
 
     <div class="block-shell__mid">
@@ -96,8 +107,10 @@ const showFooter = computed(() => has('footer'))
   --nn-top-brand-width: calc(
     var(--nn-sidebar-width) + var(--nn-sidebar-content-gap)
   );
+  /* 顶栏下方英雄区（玻璃 + 搜索）——留白更足 */
+  --nn-glass-band: 148px;
   --nn-sidebar-sticky-top: calc(
-    var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-sidebar-gap)
+    var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-glass-band)
   );
   --block-right-width: 280px;
 
@@ -110,7 +123,7 @@ const showFooter = computed(() => has('footer'))
 
   &.is-debug {
     .block-shell__top-nav,
-    .block-shell__top-full,
+    .block-shell__hero,
     .block-shell__left,
     .block-shell__main-top,
     .block-shell__main,
@@ -128,18 +141,58 @@ const showFooter = computed(() => has('footer'))
   top: 0;
   z-index: 100;
   flex-shrink: 0;
+  width: 100%;
 }
 
-.block-shell__top-full {
-  margin: var(--nn-sidebar-gap);
-  margin-bottom: 0;
+.block-shell__hero {
+  position: relative;
+  flex-shrink: 0;
+  min-height: var(--nn-glass-band, 148px);
+  /* 玻璃区全宽；搜索内容用内边距对齐顶栏 */
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px var(--nn-sidebar-gap) 32px;
   box-sizing: border-box;
-  min-height: var(--nn-search-height);
-  transition: margin-left 0.32s var(--nn-drawer-ease);
+  isolation: isolate;
+  z-index: 1;
+
+  &.has-search {
+    min-height: var(--nn-glass-band, 148px);
+  }
 }
 
-.block-shell.has-left .block-shell__top-full {
-  margin-left: var(--nn-drawer-slot);
+.block-shell__glass-band {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 10%,
+    #000 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 10%,
+    #000 90%,
+    transparent 100%
+  );
+}
+
+.block-shell__hero-search {
+  position: relative;
+  z-index: 1;
+  width: min(880px, 100%);
+  pointer-events: auto;
 }
 
 .block-shell__mid {
@@ -147,6 +200,10 @@ const showFooter = computed(() => has('footer'))
   align-items: stretch;
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: var(--nn-shell-max-width, 1600px);
+  margin-inline: auto;
+  box-sizing: border-box;
 }
 
 .block-shell__left {
@@ -182,12 +239,18 @@ const showFooter = computed(() => has('footer'))
 }
 
 .block-shell__bottom-full {
+  width: 100%;
+  max-width: var(--nn-shell-max-width, 1600px);
+  margin-inline: auto;
   padding: 0 var(--nn-sidebar-gap);
   box-sizing: border-box;
 }
 
 .block-shell__footer {
   flex-shrink: 0;
+  width: 100%;
+  max-width: var(--nn-shell-max-width, 1600px);
+  margin-inline: auto;
   padding: 16px var(--nn-sidebar-gap) 24px;
   box-sizing: border-box;
   text-align: center;
@@ -196,8 +259,37 @@ const showFooter = computed(() => has('footer'))
 }
 
 @media (max-width: 900px) {
-  .block-shell.has-left .block-shell__top-full {
-    margin: 8px 6px 0;
+  .block-shell {
+    --nn-glass-band: 120px;
+    --nn-shell-max-width: 100%;
+  }
+
+  .block-shell__hero {
+    margin: 0;
+    padding: 18px 12px 20px;
+  }
+
+  .block-shell__glass-band {
+    inset: 0;
+    /* 上下更快淡出，块更像氛围而非贴在搜索栏上 */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 18%,
+      #000 78%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 18%,
+      #000 78%,
+      transparent 100%
+    );
+  }
+
+  .block-shell__hero-search {
+    width: 100%;
   }
 
   .block-shell__mid {

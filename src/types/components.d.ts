@@ -36,6 +36,8 @@ declare module 'vue' {
     IconPicker: typeof import('./../components/site/IconPicker.vue')['default']
     ImportDialog: typeof import('./../components/site/ImportDialog.vue')['default']
     NavIcon: typeof import('./../components/common/NavIcon.vue')['default']
+    PageGlassBackdrop: typeof import('./../components/layout/PageGlassBackdrop.vue')['default']
+    PageSkeleton: typeof import('./../components/layout/PageSkeleton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchDialog: typeof import('./../components/layout/SearchDialog.vue')['default']
