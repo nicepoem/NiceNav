@@ -28,6 +28,7 @@ import brandLogo from '@/assets/brand/logo.png'
   background: transparent;
   flex-shrink: 0;
   box-sizing: border-box;
+  line-height: 0;
 }
 
 .sidebar-logo__mark {
@@ -41,9 +42,11 @@ import brandLogo from '@/assets/brand/logo.png'
 
 .sidebar-logo__title {
   margin: 0;
+  padding: 0;
   color: var(--nn-sidebar-logo-text, var(--el-text-color-primary));
   font-weight: 650;
   font-size: 15px;
+  line-height: 1;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -56,5 +59,23 @@ import brandLogo from '@/assets/brand/logo.png'
 
 :global(html.nn-sidebar-narrow) .sidebar-logo__title {
   display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar-logo {
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 0 4px 0 10px;
+  }
+
+  .sidebar-logo__mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+
+  .sidebar-logo__title {
+    font-size: 14px;
+  }
 }
 </style>

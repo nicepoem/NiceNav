@@ -339,8 +339,15 @@ useSortable(
   }
 
   .cat-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 临界宽度（约 858–900）约 3～4 列，不再锁死两列 */
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
     gap: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .cat-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

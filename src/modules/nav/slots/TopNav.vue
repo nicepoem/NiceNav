@@ -30,7 +30,7 @@ const host = inject(NAV_HOST_KEY)
 
 .nav-top-nav__chrome {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   height: var(--nn-header-height);
   border-radius: var(--nn-header-radius, var(--nn-sidebar-radius, 12px));
   background-color: var(--nn-sidebar-glass-bg, var(--nn-section-bg, #fff));
@@ -45,23 +45,32 @@ const host = inject(NAV_HOST_KEY)
 
 .nav-top-nav__brand {
   flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
   width: var(--nn-top-brand-width, var(--nn-sidebar-width));
   transition: width 0.32s var(--nn-drawer-ease, cubic-bezier(0.32, 0.72, 0, 1));
 }
 
 .nav-top-nav__header {
   flex: 1;
+  align-self: stretch;
   min-width: 0;
+  min-height: 0;
   box-shadow: none !important;
 }
 
 @media (max-width: 900px) {
-  .nav-top-nav__brand {
-    display: none;
-  }
-
   .nav-top-nav {
     padding: 8px 6px 0;
+  }
+
+  .nav-top-nav__brand {
+    width: auto;
+    min-width: 44px;
+  }
+
+  .nav-top-nav__chrome {
+    height: 52px;
   }
 }
 </style>

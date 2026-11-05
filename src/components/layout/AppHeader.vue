@@ -110,7 +110,7 @@ const hasActions = computed(
 <style scoped lang="scss">
 .navbar {
   height: 100%;
-  min-height: calc(var(--nn-header-height) - 2px);
+  min-height: 0;
   display: flex;
   align-items: center;
   gap: 12px;
