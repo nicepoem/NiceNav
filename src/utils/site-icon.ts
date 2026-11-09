@@ -132,10 +132,28 @@ function probeWithImage(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<stri
   })
 }
 
-type DevProbeResult = { kind: 'ok' } | { kind: 'miss' } | { kind: 'proxy-down' }
+type ProbeChannelResult = { kind: 'ok' } | { kind: 'miss' } | { kind: 'proxy-down' }
 
-/** 开发态走同源代理，404/CORP 不进浏览器控制台 */
-async function probeViaDevProxy(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<DevProbeResult> {
+type ChromeRuntime = {
+  id?: string
+  sendMessage: (
+    message: unknown,
+    responseCallback?: (response: unknown) => void,
+  ) => void
+  lastError?: { message?: string }
+}
+
+declare global {
+  interface Window {
+    chrome?: { runtime?: ChromeRuntime }
+  }
+}
+
+/** 开发 / pnpm start：同源 /api/icon-probe，404/CORP 不进控制台 */
+async function probeViaDevProxy(
+  url: string,
+  timeoutMs = PROBE_TIMEOUT_MS,
+): Promise<ProbeChannelResult> {
   const ctrl = new AbortController()
   const timer = window.setTimeout(() => ctrl.abort(), timeoutMs + 400)
   try {
@@ -153,9 +171,39 @@ async function probeViaDevProxy(url: string, timeoutMs = PROBE_TIMEOUT_MS): Prom
   }
 }
 
+/** 浏览器插件：后台 host_permissions 探测，对齐 /api/icon-probe */
+async function probeViaExtension(
+  url: string,
+  timeoutMs = PROBE_TIMEOUT_MS,
+): Promise<ProbeChannelResult> {
+  const runtime = window.chrome?.runtime
+  if (!runtime?.id) return { kind: 'proxy-down' }
+
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve({ kind: 'proxy-down' }), timeoutMs + 500)
+    try {
+      runtime.sendMessage({ type: 'PROBE_ICON', url }, (response) => {
+        window.clearTimeout(timer)
+        if (runtime.lastError || !response || typeof response !== 'object') {
+          resolve({ kind: 'proxy-down' })
+          return
+        }
+        const data = response as { ok?: boolean }
+        resolve(data.ok ? { kind: 'ok' } : { kind: 'miss' })
+      })
+    } catch {
+      window.clearTimeout(timer)
+      resolve({ kind: 'proxy-down' })
+    }
+  })
+}
+
 async function probe(url: string, timeoutMs = PROBE_TIMEOUT_MS): Promise<string> {
-  // 有同源 /api/icon-probe 时优先走代理，避免控制台 404/CORP；代理不可用再退回 Image
-  const result = await probeViaDevProxy(url, timeoutMs)
+  // 优先同源 API；扩展页无 API 时走 background；都不可用再退 Image
+  let result = await probeViaDevProxy(url, timeoutMs)
+  if (result.kind === 'proxy-down') {
+    result = await probeViaExtension(url, timeoutMs)
+  }
   if (result.kind === 'ok') return url
   if (result.kind === 'miss') throw new Error('unavailable')
   return probeWithImage(url, timeoutMs)

@@ -91,7 +91,12 @@ export class IndexedDbStorage implements NavStorage {
     const cleanedMenus = stripUnusedHeaderMenus(headerMenus)
     settings.headerMenus = cleanedMenus
     if (cleanedMenus.length !== headerMenus.length || hasObsoleteSettings(rawSettings)) {
-      await this.db.meta.put({ key: 'settings', value: clonePlain(settings) })
+      // settings 回写是读路径上的附带清理：失败不应让整个 getAll 抛错（否则整站降级内存模式）
+      try {
+        await this.db.meta.put({ key: 'settings', value: clonePlain(settings) })
+      } catch {
+        // 清理回写失败可忽略，下次读取再试
+      }
     }
 
     return {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
-import PageGlassBackdrop from '@/components/layout/PageGlassBackdrop.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -48,15 +47,12 @@ const showFooter = computed(() => has('footer'))
       <slot name="topNav" />
     </header>
 
-    <!-- 顶栏下：玻璃装饰 + 主搜索栏 -->
+    <!-- 顶栏下：主搜索栏（无背景） -->
     <div
       v-if="has('topNav') || showTopFull"
       class="block-shell__hero"
       :class="{ 'has-search': showTopFull }"
     >
-      <div class="block-shell__glass-band" aria-hidden="true">
-        <PageGlassBackdrop />
-      </div>
       <div v-if="showTopFull" class="block-shell__hero-search">
         <slot name="topFull" />
       </div>
@@ -102,12 +98,11 @@ const showFooter = computed(() => has('footer'))
   display: flex;
   flex-direction: column;
   background: transparent;
-  --nn-drawer-slot: var(--nn-sidebar-rail);
   /* 顶栏品牌区 = 侧栏卡片宽 + 内容间距，使顶栏右段与分类块左缘对齐 */
   --nn-top-brand-width: calc(
     var(--nn-sidebar-width) + var(--nn-sidebar-content-gap)
   );
-  /* 顶栏下方英雄区（玻璃 + 搜索）——留白更足 */
+  /* 顶栏下方英雄区（搜索栏）——留白更足 */
   --nn-glass-band: 148px;
   --nn-sidebar-sticky-top: calc(
     var(--nn-sidebar-gap) + var(--nn-header-height) + var(--nn-glass-band)
@@ -115,7 +110,6 @@ const showFooter = computed(() => has('footer'))
   --block-right-width: 280px;
 
   &.is-collapsed {
-    --nn-drawer-slot: var(--nn-sidebar-rail-collapsed);
     --nn-top-brand-width: calc(
       var(--nn-sidebar-collapsed) + var(--nn-sidebar-content-gap)
     );
@@ -162,30 +156,6 @@ const showFooter = computed(() => has('footer'))
   &.has-search {
     min-height: var(--nn-glass-band, 148px);
   }
-}
-
-.block-shell__glass-band {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  background: transparent;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    #000 10%,
-    #000 90%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    #000 10%,
-    #000 90%,
-    transparent 100%
-  );
 }
 
 .block-shell__hero-search {
@@ -267,25 +237,6 @@ const showFooter = computed(() => has('footer'))
   .block-shell__hero {
     margin: 0;
     padding: 18px 12px 20px;
-  }
-
-  .block-shell__glass-band {
-    inset: 0;
-    /* 上下更快淡出，块更像氛围而非贴在搜索栏上 */
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      #000 18%,
-      #000 78%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      #000 18%,
-      #000 78%,
-      transparent 100%
-    );
   }
 
   .block-shell__hero-search {

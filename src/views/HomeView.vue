@@ -6,12 +6,9 @@ import { useNavStore } from '@/stores/nav'
 import ModuleHost from '@/modules/ModuleHost.vue'
 import { NAV_HOST_KEY, NAV_MAIN_HANDLERS_KEY } from '@/modules/nav'
 import FloatingDock from '@/components/layout/FloatingDock.vue'
-import { confirmDeleteCategory, confirmDeleteSite } from '@/utils/confirm-delete'
+import { confirmDeleteSite } from '@/utils/confirm-delete'
 
 const SiteFormDialog = defineAsyncComponent(() => import('@/components/site/SiteFormDialog.vue'))
-const CategoryFormDialog = defineAsyncComponent(
-  () => import('@/components/site/CategoryFormDialog.vue'),
-)
 const CategoryManagerDialog = defineAsyncComponent(
   () => import('@/components/site/CategoryManagerDialog.vue'),
 )
@@ -22,11 +19,9 @@ const nav = useNavStore()
 const mobileOpen = ref(false)
 const createDialog = ref(false)
 const siteDialog = ref(false)
-const categoryDialog = ref(false)
 const categoryManagerDialog = ref(false)
 const settingsDialog = ref(false)
 const editingSite = ref<Site | null>(null)
-const editingCategory = ref<Category | null>(null)
 const preferCategoryId = ref<string | undefined>()
 
 function openAddSite(category?: Category) {
@@ -55,21 +50,6 @@ async function removeSite(site: Site) {
   }
 }
 
-function openEditCategory(category: Category) {
-  editingCategory.value = category
-  categoryDialog.value = true
-}
-
-async function removeCategory(category: Category) {
-  try {
-    await confirmDeleteCategory(category.name, nav.childrenOf(category.id).length)
-    await nav.removeCategory(category.id)
-    ElMessage.success('分类已删除')
-  } catch {
-    // cancelled
-  }
-}
-
 function openManageCategories() {
   categoryManagerDialog.value = true
 }
@@ -88,9 +68,6 @@ provide(NAV_HOST_KEY, {
 provide(NAV_MAIN_HANDLERS_KEY, {
   openEditSite,
   removeSite,
-  openEditCategory,
-  removeCategory,
-  openAddSite,
 })
 </script>
 
@@ -108,11 +85,6 @@ provide(NAV_MAIN_HANDLERS_KEY, {
       :site="editingSite"
       :categories="nav.categories"
       :prefer-category-id="preferCategoryId"
-    />
-    <CategoryFormDialog
-      v-if="categoryDialog"
-      v-model="categoryDialog"
-      :category="editingCategory"
     />
     <CategoryManagerDialog v-if="categoryManagerDialog" v-model="categoryManagerDialog" />
     <ImportDialog v-if="settingsDialog" v-model="settingsDialog" />

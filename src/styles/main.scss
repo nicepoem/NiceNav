@@ -4,9 +4,9 @@
   --el-border-radius-small: 6px;
   --el-border-radius-round: 20px;
   --nn-primary: #f1404b;
-  --nn-primary-rgb: 241, 64, 75;
   --nn-accent: #f1404b;
-  --nn-accent-rgb: 241, 64, 75;
+  /* OneNav 招牌：主题色→玫红对角渐变，用于强调元素（按钮/标题装饰/图标激活） */
+  --nn-primary-grad: linear-gradient(135deg, #f1404b 0%, #d12768 100%);
   --el-color-primary: #f1404b;
   --el-color-primary-rgb: 241, 64, 75;
   --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #fff);
@@ -20,11 +20,8 @@
   --nn-sidebar-width: 120px;
   /* 折叠宽度 = 菜单项高度，展开时图标列同宽，避免跳动 */
   --nn-sidebar-collapsed: 52px;
-  --nn-menu-item-size: var(--nn-sidebar-collapsed);
   /* 顶栏高度（玻璃导航） */
   --nn-header-height: 64px;
-  /* 全局搜索行高度（与 GlobalSearch .cmd-search min-height 一致） */
-  --nn-search-height: 48px;
   /* 侧栏+主内容最大宽度；顶栏 / 搜索仍全宽 */
   --nn-shell-max-width: 1600px;
   --nn-shell-offset: max(0px, calc((100vw - var(--nn-shell-max-width)) / 2));
@@ -41,12 +38,9 @@
   /* 面板统一圆角（与顶栏磨砂一致） */
   --nn-sidebar-radius: 12px;
   --nn-drawer-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --nn-drawer-duration: 0.45s;
   --nn-radius: var(--el-border-radius-base);
   /* 交互项：圆角 + 内边距高亮（与侧栏菜单一致） */
   --nn-item-radius: 8px;
-  --nn-item-pad-y: 4px;
-  --nn-item-pad-x: 8px;
   /* 选中 / 悬浮：浅灰底 + 主色字 */
   --nn-item-active-bg: #f5f6f8;
   --nn-item-hover-bg: #f5f6f8;
@@ -61,52 +55,45 @@
   --nn-transition-slow: var(--nn-duration-slow) var(--nn-ease);
 
   /* —— 白天 —— */
-  --nn-shadow: 0 1px 4px rgba(0, 21, 41, 0.06);
-  --nn-shadow-hover: 0 4px 14px rgba(0, 21, 41, 0.1);
-  --nn-card-inset: inset 0 0 10px rgba(0, 0, 0, 0.05);
-  --nn-card-inset-hover: inset 0 0 12px rgba(0, 0, 0, 0.08);
+  /* 柔和大弥散阴影（暖中性，替代生硬内阴影），让面板/卡片真正"浮起" */
+  --nn-shadow: 0 8px 24px -12px rgba(31, 41, 55, 0.20), 0 2px 6px -2px rgba(31, 41, 55, 0.10);
+  --nn-shadow-hover: 0 16px 38px -14px rgba(31, 41, 55, 0.26), 0 4px 10px -2px rgba(31, 41, 55, 0.12);
+  --nn-card-inset: 0 1px 2px rgba(31, 41, 55, 0.05), 0 4px 14px -8px rgba(31, 41, 55, 0.10);
+  --nn-card-inset-hover: 0 10px 24px -10px rgba(31, 41, 55, 0.20), 0 2px 6px -2px rgba(31, 41, 55, 0.10);
 
-  --main-shadow: rgba(0, 0, 0, 0.1);
-  --nn-sidebar-bg: #ffffff;
-  --nn-sidebar-surface: #ffffff;
-  --nn-elevated-bg: #ffffff;
-  --nn-elevated-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
-  --nn-elevated-shadow-hover: 0 6px 22px rgba(15, 23, 42, 0.12);
-  --nn-chrome-bg: #ffffff;
-  --nn-chrome-shadow: none;
-  --nn-sidebar-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
-  /* 侧栏与内容区一致：实色白底，无磨砂 */
-  --nn-sidebar-glass-bg: var(--nn-sidebar-surface);
-  --nn-sidebar-glass-border: transparent;
-  --nn-sidebar-blur: 0px;
-  --nn-panel-shadow: none;
+  --main-shadow: rgba(31, 41, 55, 0.12);
+  /* 侧栏面板：柔白实底，与大分类面板同一色阶，避免纯白刺眼 */
+  --nn-sidebar-surface: #f6f7f9;
+  --nn-elevated-bg: rgba(255, 255, 255, 0.86);
+  --nn-elevated-shadow: 0 10px 30px -14px rgba(31, 41, 55, 0.22), 0 3px 8px -2px rgba(31, 41, 55, 0.10);
+  --nn-elevated-shadow-hover: 0 16px 38px -14px rgba(31, 41, 55, 0.28), 0 4px 10px -2px rgba(31, 41, 55, 0.12);
+  --nn-chrome-bg: rgba(255, 255, 255, 0.86);
+  --nn-chrome-shadow: 0 10px 30px -16px rgba(31, 41, 55, 0.22);
+  --nn-sidebar-shadow: 0 12px 34px -16px rgba(31, 41, 55, 0.20);
+  --nn-panel-shadow: 0 18px 50px -20px rgba(31, 41, 55, 0.30), 0 4px 12px -4px rgba(31, 41, 55, 0.12);
   --nn-sidebar-pad: 6px;
-  --nn-sidebar-logo-bg: #ffffff;
-  --nn-sidebar-logo-text: #303133;
-  --nn-sidebar-text: #303133;
-  --nn-sidebar-text-active: var(--nn-primary);
-  --nn-menu-hover-bg: rgba(0, 0, 0, 0.03);
+  --nn-sidebar-logo-text: #33373f;
+  --nn-sidebar-text: #484b4f;
+  --nn-menu-hover-bg: rgba(31, 41, 55, 0.05);
 
-  --nn-header-bg: var(--nn-sidebar-bg);
-  /* 顶栏与侧栏同色实底，无透明 */
-  --nn-header-glass-bg: var(--nn-sidebar-glass-bg);
-  --nn-header-glass-border: var(--nn-sidebar-glass-border);
-  --nn-header-blur: 0px;
-  --nn-header-shadow: var(--nn-panel-shadow);
   --nn-header-radius: var(--nn-sidebar-radius);
 
-  --nn-page-bg: #f3f4f6;
-  --nn-section-bg: #ffffff;
-  --nn-cat-block-bg: #ffffff;
-  --nn-surface-bg: transparent;
+  --nn-page-bg: #f2f4f7;
+  /* 磨砂面板：半透白，环境光透出形成柔光层 */
+  --nn-section-bg: rgba(255, 255, 255, 0.80);
+  --nn-cat-block-bg: #fafbfc;
+  --nn-cat-block-shadow: 0 14px 40px -22px rgba(31, 41, 55, 0.28), 0 2px 8px -4px rgba(31, 41, 55, 0.10);
+  --nn-cat-block-border: none;
   /* 网址卡片：浅灰底 */
-  --nn-card-bg: #f5f6f8;
-  --nn-card-bg-hover: color-mix(in srgb, var(--nn-primary) 6%, #f0f1f4);
-  --nn-tab-bg: #f3f4f6;
-  --nn-tab-hover-bg: color-mix(in srgb, var(--nn-primary) 10%, #f3f4f6);
+  --nn-card-bg: #f0f2f5;
+  --nn-tab-bg: rgba(31, 41, 55, 0.045);
   --nn-tab-item-hover-bg: #ffffff;
-  --nn-menu-active-bg: #f3f4f6;
-  --nn-divider: #e6e8eb;
+  --nn-menu-active-bg: rgba(31, 41, 55, 0.06);
+  --nn-divider: rgba(31, 41, 55, 0.08);
+  /* 英雄搜索栏引擎按钮底色 */
+  --nn-hero-engine-bg: rgba(255, 255, 255, 0.7);
+  /* 输入框保留柔和"内凹"，与外投影面板区分语义 */
+  --nn-field-shadow: none;
 
   /* 滚动条（Windows Chrome/Edge/Firefox） */
   --nn-scrollbar-size: 10px;
@@ -114,14 +101,29 @@
   --nn-scrollbar-thumb: #c0c4cc;
   --nn-scrollbar-thumb-hover: #909399;
   --nn-scrollbar-track: transparent;
+
+  /* 全局阴影移除（用户要求：所有页面去除投影，回归干净的平面观感） */
+  --nn-shadow: none;
+  --nn-shadow-hover: none;
+  --nn-card-inset: none;
+  --nn-card-inset-hover: none;
+  --nn-elevated-shadow: none;
+  --nn-elevated-shadow-hover: none;
+  --nn-chrome-shadow: none;
+  /* 侧栏分类面板：单独恢复柔和弥散阴影，与内容区形成浮起层次 */
+  --nn-sidebar-shadow:
+    0 8px 28px -12px rgba(31, 41, 55, 0.16),
+    0 2px 8px -4px rgba(31, 41, 55, 0.08);
+  --nn-panel-shadow: none;
+  --nn-cat-block-shadow: none;
 }
 
 html.dark {
   /* 暗色主题主色 */
   --nn-primary: #f1404b;
-  --nn-primary-rgb: 241, 64, 75;
   --nn-accent: #f1404b;
-  --nn-accent-rgb: 241, 64, 75;
+  /* 暗底上玫红需更亮以保证对比 */
+  --nn-primary-grad: linear-gradient(135deg, #f1404b 0%, #ec5a86 100%);
   --el-color-primary: #f1404b;
   --el-color-primary-rgb: 241, 64, 75;
   --el-color-primary-light-3: color-mix(in srgb, #f1404b 70%, #1a1c20);
@@ -132,56 +134,61 @@ html.dark {
   --el-color-primary-dark-2: color-mix(in srgb, #f1404b 75%, #fff);
 
   /* —— 黑夜 —— */
-  --nn-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  --nn-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --nn-card-inset: inset 0 0 10px rgba(0, 0, 0, 0.35);
-  --nn-card-inset-hover: inset 0 0 12px rgba(0, 0, 0, 0.45);
+  --nn-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.55), 0 2px 6px -2px rgba(0, 0, 0, 0.40);
+  --nn-shadow-hover: 0 16px 40px -16px rgba(0, 0, 0, 0.65), 0 4px 10px -2px rgba(0, 0, 0, 0.45);
+  --nn-card-inset: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 18px -10px rgba(0, 0, 0, 0.50);
+  --nn-card-inset-hover: 0 10px 26px -12px rgba(0, 0, 0, 0.60), 0 2px 6px -2px rgba(0, 0, 0, 0.45);
 
-  --nn-item-active-bg: #2a2e36;
-  --nn-item-hover-bg: #2a2e36;
+  --nn-item-active-bg: #2a2f3a;
+  --nn-item-hover-bg: #2a2f3a;
 
-  --main-shadow: rgba(0, 0, 0, 0.35);
-  --nn-sidebar-bg: #1a1c20;
-  --nn-sidebar-surface: #1c1f28;
-  --nn-elevated-bg: #1f232c;
-  --nn-elevated-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-  --nn-elevated-shadow-hover: 0 6px 22px rgba(0, 0, 0, 0.45);
-  --nn-chrome-bg: #1f232c;
-  --nn-chrome-shadow: none;
-  --nn-sidebar-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-  --nn-sidebar-glass-bg: var(--nn-sidebar-surface);
-  --nn-sidebar-glass-border: transparent;
-  --nn-sidebar-blur: 0px;
-  --nn-panel-shadow: none;
+  --main-shadow: rgba(0, 0, 0, 0.45);
+  --nn-sidebar-surface: rgba(28, 31, 40, 0.82);
+  --nn-elevated-bg: rgba(34, 38, 48, 0.86);
+  --nn-elevated-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.55), 0 3px 8px -2px rgba(0, 0, 0, 0.40);
+  --nn-elevated-shadow-hover: 0 16px 40px -16px rgba(0, 0, 0, 0.65), 0 4px 10px -2px rgba(0, 0, 0, 0.45);
+  --nn-chrome-bg: rgba(34, 38, 48, 0.86);
+  --nn-chrome-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.55);
+  --nn-sidebar-shadow: 0 12px 34px -16px rgba(0, 0, 0, 0.50);
+  --nn-panel-shadow: 0 20px 54px -22px rgba(0, 0, 0, 0.70), 0 4px 12px -4px rgba(0, 0, 0, 0.45);
   --nn-sidebar-pad: 6px;
-  --nn-sidebar-logo-bg: #1a1c20;
   --nn-sidebar-logo-text: #ffffff;
-  --nn-sidebar-text: rgba(255, 255, 255, 0.78);
-  --nn-sidebar-text-active: var(--nn-primary);
+  --nn-sidebar-text: rgba(255, 255, 255, 0.82);
   --nn-menu-hover-bg: rgba(255, 255, 255, 0.08);
 
-  --nn-header-bg: var(--nn-sidebar-bg);
-  --nn-header-glass-bg: var(--nn-sidebar-glass-bg);
-  --nn-header-glass-border: var(--nn-sidebar-glass-border);
-  --nn-header-blur: 0px;
-  --nn-header-shadow: var(--nn-panel-shadow);
   --nn-header-radius: var(--nn-sidebar-radius);
 
-  --nn-page-bg: #14161c;
-  --nn-section-bg: #1a1d24;
-  --nn-cat-block-bg: #1a1d24;
-  --nn-surface-bg: transparent;
-  --nn-card-bg: #22262f;
-  --nn-card-bg-hover: color-mix(in srgb, var(--nn-primary) 10%, #2a2f3a);
-  --nn-tab-bg: #252a34;
-  --nn-tab-hover-bg: color-mix(in srgb, var(--nn-primary) 14%, #252a34);
+  --nn-page-bg: #11131a;
+  --nn-section-bg: rgba(30, 34, 44, 0.80);
+  --nn-cat-block-bg: rgba(24, 27, 36, 0.66);
+  --nn-cat-block-shadow: 0 16px 44px -24px rgba(0, 0, 0, 0.65), 0 2px 8px -4px rgba(0, 0, 0, 0.45);
+  --nn-cat-block-border: none;
+  --nn-card-bg: rgba(46, 51, 64, 0.66);
+  --nn-tab-bg: rgba(255, 255, 255, 0.06);
   --nn-tab-item-hover-bg: #2a2f3a;
   --nn-menu-active-bg: #2a2f3a;
-  --nn-divider: #2a2e36;
+  --nn-divider: rgba(255, 255, 255, 0.08);
+  --nn-hero-engine-bg: rgba(255, 255, 255, 0.12);
+  --nn-field-shadow: none;
 
   --nn-scrollbar-thumb: #5c6370;
   --nn-scrollbar-thumb-hover: #8b929e;
   --nn-scrollbar-track: transparent;
+
+  /* 全局阴影移除（暗色主题同步） */
+  --nn-shadow: none;
+  --nn-shadow-hover: none;
+  --nn-card-inset: none;
+  --nn-card-inset-hover: none;
+  --nn-elevated-shadow: none;
+  --nn-elevated-shadow-hover: none;
+  --nn-chrome-shadow: none;
+  /* 侧栏分类面板：单独恢复柔和弥散阴影（暗色更深一档） */
+  --nn-sidebar-shadow:
+    0 8px 28px -12px rgba(0, 0, 0, 0.55),
+    0 2px 8px -4px rgba(0, 0, 0, 0.35);
+  --nn-panel-shadow: none;
+  --nn-cat-block-shadow: none;
 }
 
 *,
@@ -201,6 +208,7 @@ body {
   font-family: var(--el-font-family);
   color: var(--el-text-color-primary);
   background-color: var(--nn-page-bg);
+  background-image: none;
   font-size: var(--el-font-size-base);
   transition:
     background-color var(--nn-transition-slow),
@@ -417,7 +425,7 @@ body::-webkit-scrollbar-corner,
   border: none !important;
   border-radius: var(--nn-msgbox-radius) !important;
   background: var(--nn-section-bg) !important;
-  box-shadow: 0 16px 48px rgba(15, 40, 80, 0.18) !important;
+  box-shadow: none !important;
   overflow: hidden;
 }
 
@@ -684,7 +692,7 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   border-radius: 10px !important;
   padding: 6px !important;
   box-sizing: border-box !important;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1) !important;
+  box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   min-width: unset !important;
@@ -804,7 +812,7 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   border: none !important;
   border-radius: 4px !important;
   padding: 5px 11px !important;
-  box-shadow: var(--el-box-shadow-light) !important;
+  box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   min-width: 0 !important;
@@ -831,7 +839,7 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   border: none !important;
   border-radius: 4px !important;
   padding: 5px 11px !important;
-  box-shadow: var(--el-box-shadow-light) !important;
+  box-shadow: none !important;
   min-width: 0 !important;
   width: max-content !important;
   max-width: 280px !important;
@@ -878,7 +886,7 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   box-sizing: border-box;
   background: var(--nn-section-bg);
   border-radius: var(--nn-item-radius, 8px);
-  box-shadow: var(--nn-card-inset);
+  box-shadow: var(--nn-field-shadow);
   transition: box-shadow var(--nn-transition-fast);
 
   &:focus-within {
@@ -1009,7 +1017,7 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
   }
 
   &--primary {
-    background: var(--nn-primary);
+    background: var(--nn-primary-grad);
     color: #fff;
 
     &:hover {
@@ -1030,6 +1038,22 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
     opacity: 0.55;
     cursor: not-allowed;
     filter: none;
+  }
+}
+
+/* —— OneNav 风格：Element Plus 主按钮套用主题色渐变 —— */
+.el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
+  background: var(--nn-primary-grad) !important;
+  border: 0 !important;
+  transition:
+    filter var(--nn-transition-fast);
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 
@@ -1313,5 +1337,39 @@ html.nn-sidebar-wide .nn-sidebar-popup.el-popper:not(:has(.el-menu)) {
       color: var(--nn-primary) !important;
     }
   }
+}
+
+/* —— 全局去除 Element 原生组件的边框与阴影（呼应无框无影视觉） —— */
+.el-input__wrapper {
+  box-shadow: none !important;
+  background-color: var(--nn-tab-bg, #f2f4f7) !important;
+}
+
+.el-textarea__inner {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.el-button {
+  border: none !important;
+}
+
+.el-button--default:not(.is-plain),
+.el-button--plain:not(.is-text) {
+  background-color: var(--nn-item-hover-bg, #f3f4f6) !important;
+}
+
+.el-popper.is-light,
+.el-dropdown-menu,
+.el-select-dropdown,
+.el-menu--popup {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.el-dialog,
+.el-message-box {
+  box-shadow: none !important;
+  border: none !important;
 }
 

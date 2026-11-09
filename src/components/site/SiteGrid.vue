@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
-import type { Category, Site } from '@nice-nav/core'
+import { computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
+import type { Site } from '@nice-nav/core'
 import { useNavStore } from '@/stores/nav'
 import CategorySection from './CategorySection.vue'
 
 const emit = defineEmits<{
   editSite: [site: Site]
   removeSite: [site: Site]
-  editCategory: [category: Category]
-  removeCategory: [category: Category]
 }>()
 
 const nav = useNavStore()
@@ -50,7 +48,8 @@ onMounted(() => setupObserver())
 watch(
   () => sections.value.map((n) => n.id).join(','),
   async () => {
-    await Promise.resolve()
+    // 等待 DOM patch 完成后再收集 .cat-block，否则会拿到旧节点
+    await nextTick()
     setupObserver()
   },
 )
@@ -61,13 +60,12 @@ onUnmounted(() => observer?.disconnect())
 <template>
   <div class="grid-wrap">
     <CategorySection
-      v-for="node in sections"
+      v-for="(node, i) in sections"
       :key="node.id"
       :node="node"
+      :style="{ '--cat-enter-delay': `${Math.min(i * 60, 420)}ms` }"
       @edit-site="emit('editSite', $event)"
       @remove-site="emit('removeSite', $event)"
-      @edit-category="emit('editCategory', $event)"
-      @remove-category="emit('removeCategory', $event)"
     />
 
     <el-empty

@@ -22,11 +22,10 @@ pnpm dev
 
 添加网址时的标题/简介识别依赖服务端代抓（浏览器直连多数站点会因 CORS 失败）：
 
-1. **推荐**：`pnpm build && pnpm start`，用 Node 同时提供静态资源与 `/api/page-meta`。
+1. **推荐**：`pnpm build && pnpm start`，用 Node 同时提供静态资源与 `/api/page-meta`、`/api/icon-probe`（与 `pnpm dev` 一致）。
 2. 或用 Nginx 等反代，把 `/api/page-meta`、`/api/icon-probe` 转到上述 Node 服务。
-3. 若只部署纯静态文件，客户端会回退到公开第三方接口（可在设置关闭）。
-
-Chrome 扩展说明见 [`extension/README.md`](extension/README.md)。
+3. **Chrome 扩展**：`pnpm build:extension`，由后台脚本抓取元数据/探测图标（与开发同源能力对齐）；见 [`extension/README.md`](extension/README.md)。
+4. 纯静态且无扩展时，需在设置中开启第三方接口作为兜底。
 
 ## 积木式模块布局
 

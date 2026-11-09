@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Search, Close, ArrowDown } from '@element-plus/icons-vue'
 import { useNavStore } from '@/stores/nav'
 import { useSearchHotkey } from '@/composables/useSearchHotkey'
@@ -39,6 +39,14 @@ useSearchHotkey({
 })
 
 const engines = computed(() => nav.settings.searchEngines ?? [])
+
+onBeforeUnmount(() => {
+  // 卸载后不再回写 store，避免悬挂定时器触发状态更新
+  if (searchDebounce) {
+    clearTimeout(searchDebounce)
+    searchDebounce = null
+  }
+})
 
 watch(
   () => nav.searchQuery,
@@ -203,9 +211,7 @@ function onSubmit() {
   transition: box-shadow var(--nn-transition-fast);
 
   &:focus-within {
-    box-shadow:
-      var(--nn-elevated-shadow),
-      0 0 0 1px color-mix(in srgb, var(--nn-primary) 35%, transparent);
+    box-shadow: none;
   }
 
   &--compact {
@@ -219,7 +225,6 @@ function onSubmit() {
 
     &:focus-within {
       background: var(--nn-section-bg);
-      box-shadow: 0 0 0 1px color-mix(in srgb, var(--nn-primary) 35%, transparent);
     }
 
     .cmd-search__engine {

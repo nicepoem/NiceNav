@@ -40,6 +40,41 @@ async function fetchPageMeta(url: string) {
   }
 }
 
+/** 对齐 /api/icon-probe：有 host_permissions 时在后台探测图标是否可用 */
+async function probeIconUrl(url: string, timeoutMs = 1600): Promise<boolean> {
+  if (!isAllowedHttpUrl(url)) return false
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+      redirect: 'follow',
+      credentials: 'omit',
+      headers: {
+        Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+      },
+    })
+    if (!res.ok) return false
+    const type = (res.headers.get('content-type') || '').toLowerCase()
+    if (
+      type &&
+      !type.includes('image') &&
+      !type.includes('icon') &&
+      !type.includes('octet-stream') &&
+      !type.includes('application/xml')
+    ) {
+      return false
+    }
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return buf.byteLength >= 16
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.create({ url: chrome.runtime.getURL('index.html') })
 })
@@ -47,15 +82,24 @@ chrome.action.onClicked.addListener(() => {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message !== 'object') return undefined
   const msg = message as { type?: string; url?: string }
-  if (msg.type !== 'FETCH_PAGE_META' || !msg.url) return undefined
 
-  fetchPageMeta(String(msg.url))
-    .then((meta) => sendResponse(meta))
-    .catch((error) => {
-      sendResponse({
-        error: error instanceof Error ? error.message : 'fetch failed',
+  if (msg.type === 'FETCH_PAGE_META' && msg.url) {
+    fetchPageMeta(String(msg.url))
+      .then((meta) => sendResponse(meta))
+      .catch((error) => {
+        sendResponse({
+          error: error instanceof Error ? error.message : 'fetch failed',
+        })
       })
-    })
+    return true
+  }
 
-  return true
+  if (msg.type === 'PROBE_ICON' && msg.url) {
+    probeIconUrl(String(msg.url))
+      .then((ok) => sendResponse({ ok }))
+      .catch(() => sendResponse({ ok: false }))
+    return true
+  }
+
+  return undefined
 })

@@ -7,9 +7,342 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f1404b" />
     <title>NiceNav</title>
+    <script>
+      // 在首帧渲染前同步主题，避免暗色模式白闪（与 useTheme 的缓存键保持一致）
+      ;(function () {
+        try {
+          var mode = localStorage.getItem('nn.theme.boot')
+          var dark =
+            mode === 'dark' ||
+            ((!mode || mode === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) {
+          /* 忽略隐私模式下的存储访问异常 */
+        }
+      })()
+    </script>
+    <style>
+      /* 首屏加载骨架：覆盖 JS 加载与挂载前的空白期，Vue 挂载后自动被替换 */
+      .boot-skel {
+        min-height: 100vh;
+        background: #f2f4f7;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      html.dark .boot-skel {
+        background: #11131a;
+      }
+      .boot-skel__wrap {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      .boot-skel__chrome {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 64px;
+        padding: 0 14px;
+        box-sizing: border-box;
+      }
+      .boot-skel__hero {
+        display: flex;
+        justify-content: center;
+        padding: 28px 0 24px;
+        box-sizing: border-box;
+      }
+      .boot-skel__search {
+        width: min(880px, 100%);
+        height: 54px;
+        border-radius: 14px;
+      }
+      .boot-skel__mid {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        box-sizing: border-box;
+      }
+      .boot-skel__side {
+        flex-shrink: 0;
+        width: 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 8px;
+        border-radius: 12px;
+        background: #f6f7f9;
+        box-sizing: border-box;
+      }
+      .boot-skel__side-item {
+        height: 36px;
+        width: 100%;
+      }
+      .boot-skel__main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .boot-skel__block {
+        padding: 12px 16px 14px;
+        border-radius: 12px;
+        background: #fafbfc;
+        box-sizing: border-box;
+      }
+      .boot-skel__block-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .boot-skel__cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+      }
+      .boot-skel__card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #f0f2f5;
+        box-sizing: border-box;
+      }
+      .boot-skel__card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .boot-skel__text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .boot-skel__bone {
+        display: block;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #e6e9ef 0%, #f1f3f7 45%, #e6e9ef 100%);
+        background-size: 200% 100%;
+        animation: boot-skel-shimmer 1.4s ease-in-out infinite;
+      }
+      html.dark .boot-skel__bone {
+        background: linear-gradient(90deg, #262b36 0%, #333947 45%, #262b36 100%);
+        background-size: 200% 100%;
+      }
+      html.dark .boot-skel__side {
+        background: #1c1f28;
+      }
+      html.dark .boot-skel__block {
+        background: #181b24;
+      }
+      html.dark .boot-skel__card {
+        background: #2e3340;
+      }
+      .boot-skel__brand {
+        width: 88px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+      .boot-skel__fill {
+        flex: 1;
+        height: 18px;
+        opacity: 0.55;
+      }
+      .boot-skel__title {
+        width: 96px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      .boot-skel__tabs {
+        width: 168px;
+        height: 28px;
+        border-radius: 10px;
+        opacity: 0.7;
+      }
+      .boot-skel__line--t {
+        width: 62%;
+        height: 12px;
+      }
+      .boot-skel__line--d {
+        width: 84%;
+        height: 10px;
+        opacity: 0.75;
+      }
+      @keyframes boot-skel-shimmer {
+        0% {
+          background-position: 100% 0;
+        }
+        100% {
+          background-position: -100% 0;
+        }
+      }
+      @media (max-width: 900px) {
+        .boot-skel__wrap {
+          padding: 10px;
+        }
+        .boot-skel__chrome {
+          height: 52px;
+        }
+        .boot-skel__hero {
+          padding: 18px 0 16px;
+        }
+        .boot-skel__search {
+          height: 50px;
+        }
+        .boot-skel__mid {
+          display: block;
+        }
+        .boot-skel__side {
+          display: none;
+        }
+        .boot-skel__cards {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .boot-skel__tabs {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-skel__bone {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="boot-skel" aria-busy="true" aria-live="polite" aria-label="页面加载中">
+        <div class="boot-skel__wrap">
+          <div class="boot-skel__chrome">
+            <span class="boot-skel__bone boot-skel__brand"></span>
+            <span class="boot-skel__bone boot-skel__fill"></span>
+          </div>
+          <div class="boot-skel__hero">
+            <span class="boot-skel__bone boot-skel__search"></span>
+          </div>
+          <div class="boot-skel__mid">
+            <div class="boot-skel__side">
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+              <span class="boot-skel__bone boot-skel__side-item"></span>
+            </div>
+            <div class="boot-skel__main">
+              <div class="boot-skel__block">
+                <div class="boot-skel__block-head">
+                  <span class="boot-skel__bone boot-skel__title"></span>
+                  <span class="boot-skel__bone boot-skel__tabs"></span>
+                </div>
+                <div class="boot-skel__cards">
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="boot-skel__block">
+                <div class="boot-skel__block-head">
+                  <span class="boot-skel__bone boot-skel__title"></span>
+                  <span class="boot-skel__bone boot-skel__tabs"></span>
+                </div>
+                <div class="boot-skel__cards">
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                  <div class="boot-skel__card">
+                    <span class="boot-skel__bone boot-skel__card-icon"></span>
+                    <div class="boot-skel__text">
+                      <span class="boot-skel__bone boot-skel__line--t"></span>
+                      <span class="boot-skel__bone boot-skel__line--d"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

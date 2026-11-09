@@ -30,8 +30,6 @@ const handlers = inject(NAV_MAIN_HANDLERS_KEY)
     v-else-if="handlers"
     @edit-site="handlers.openEditSite"
     @remove-site="handlers.removeSite"
-    @edit-category="handlers.openEditCategory"
-    @remove-category="handlers.removeCategory"
   />
 </template>
 

@@ -81,8 +81,8 @@ watch(
   () => [props.modelValue, props.site, props.preferCategoryId] as const,
   ([open]) => {
     if (!open) return
+    const site = props.site
     runHydrate(() => {
-      const site = props.site
       form.id = site?.id
       form.title = site?.title ?? ''
       form.url = site?.url ? splitUrl(site.url) : ''
@@ -93,7 +93,14 @@ watch(
         : defaultSiteCategoryId(props.categories, props.preferCategoryId)
       form.icon = site?.icon ?? ''
     })
+    // runHydrate 末尾会 reset touched；编辑态在此重新锁住，防自动识别覆盖
+    if (site?.id) {
+      if (form.title) markTitleTouched()
+      if (form.description) markDescriptionTouched()
+      if (form.icon) markIconTouched()
+    }
   },
+  { immediate: true },
 )
 
 async function submit() {

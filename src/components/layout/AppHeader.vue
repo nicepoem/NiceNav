@@ -9,7 +9,6 @@ import {
 import { useNavStore } from '@/stores/nav'
 
 const emit = defineEmits<{
-  openMobile: []
   addSite: []
   manageCategories: []
 }>()
@@ -106,7 +105,7 @@ const hasActions = computed(
   padding: 0 14px;
   border: 0;
   border-radius: var(--nn-item-radius);
-  background: var(--nn-primary);
+  background: var(--nn-primary-grad);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -148,7 +147,7 @@ const hasActions = computed(
 
   &.is-active {
     color: #fff;
-    background: var(--nn-primary);
+    background: var(--nn-primary-grad);
   }
 }
 

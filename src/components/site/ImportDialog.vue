@@ -61,8 +61,13 @@ const stats = computed(() => ({
 
 const canImport = computed(() => raw.value.trim().length > 0)
 
-function exportData() {
-  nav.exportBackup()
+async function exportData() {
+  try {
+    await nav.exportBackup()
+  } catch {
+    ElMessage.error('导出备份失败，请重试')
+    return
+  }
   ElMessage.success('已导出备份')
 }
 
@@ -373,7 +378,6 @@ async function submit() {
   &.active {
     color: var(--nn-primary);
     background: var(--nn-section-bg);
-    box-shadow: 0 1px 4px rgba(15, 40, 80, 0.08);
   }
 
   &:hover:not(.active) {
@@ -529,9 +533,7 @@ async function submit() {
     box-shadow 0.2s ease;
 
   &.active {
-    border-color: var(--nn-primary);
     background: color-mix(in srgb, var(--nn-primary) 8%, var(--nn-section-bg));
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--nn-primary) 18%, transparent);
   }
 
   &:hover:not(.active) {
@@ -577,14 +579,14 @@ async function submit() {
   padding: 20px 16px;
   border-radius: 14px;
   background: var(--nn-tab-bg);
-  box-shadow: inset 0 0 0 1.5px dashed color-mix(in srgb, var(--nn-primary) 28%, transparent);
+  box-shadow: none;
   transition:
     background 0.2s ease,
     box-shadow 0.2s ease;
 
   &:hover {
     background: color-mix(in srgb, var(--nn-primary) 6%, var(--nn-tab-bg));
-    box-shadow: inset 0 0 0 1.5px dashed var(--nn-primary);
+    box-shadow: none;
   }
 }
 

@@ -269,7 +269,6 @@ onUnmounted(() => {
   &.is-active {
     color: #fff;
     background: var(--nn-primary);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--nn-primary) 35%, transparent);
   }
 }
 

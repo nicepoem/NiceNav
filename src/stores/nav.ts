@@ -1,13 +1,14 @@
 import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import {
+  applyImport,
   buildCategoryTree,
   buildSearchEngineUrl,
   createId,
   DEFAULT_SETTINGS,
   downloadExportFilename,
+  exportToJson,
   filterSites,
-  flattenCategoryTree,
   getDescendantIds,
   IndexedDbStorage,
   isAllowedHttpUrl,
@@ -15,6 +16,7 @@ import {
   normalizeAppSettings,
   sanitizeHttpUrl,
   sanitizeIconUrl,
+  validateImportJson,
   type AppSettings,
   type Category,
   type ImportMode,
@@ -72,6 +74,9 @@ export const useNavStore = defineStore('nav', () => {
     suppressBroadcastDepth += 1
     try {
       await hydrate()
+    } catch (err) {
+      // 其他标签页触发的重读失败时不应产生未处理 rejection
+      console.warn('[nav] remote hydrate failed:', err)
     } finally {
       suppressBroadcastDepth -= 1
       remoteHydrating = false
@@ -129,12 +134,6 @@ export const useNavStore = defineStore('nav', () => {
 
   const categoryTree = computed(() => buildCategoryTree(categories.value))
 
-  const visibleCategories = computed(() => {
-    const flat = flattenCategoryTree(categoryTree.value)
-    if (!searchQuery.value.trim()) return flat
-    return flat.filter((cat) => (sitesByCategory.value.get(cat.id)?.length ?? 0) > 0)
-  })
-
   const rootCategories = computed(() =>
     categories.value
       .filter((c) => c.parentId == null || c.parentId === '')
@@ -145,10 +144,6 @@ export const useNavStore = defineStore('nav', () => {
     return categories.value
       .filter((c) => c.parentId === parentId)
       .sort((a, b) => a.order - b.order)
-  }
-
-  function isChildCategory(cat: Category) {
-    return Boolean(cat.parentId)
   }
 
   function sameParent(c: Category, parentId: string | null) {
@@ -320,7 +315,15 @@ export const useNavStore = defineStore('nav', () => {
     if (!pendingIconWrites.size) return
     const batch = [...pendingIconWrites.values()]
     pendingIconWrites.clear()
-    await storage.putSites(batch)
+    try {
+      await storage.putSites(batch)
+    } catch (err) {
+      // 落库失败时回填队列，等待下一次调度重试；避免图标数据静默丢失
+      for (const item of batch) {
+        if (!pendingIconWrites.has(item.id)) pendingIconWrites.set(item.id, item)
+      }
+      console.warn('[nav] icon flush failed, queued for retry:', err)
+    }
   }
 
   function scheduleIconFlush() {
@@ -441,7 +444,6 @@ export const useNavStore = defineStore('nav', () => {
 
   async function exportBackup() {
     await flushPendingIcons()
-    const { exportToJson } = await import('@/core/import-export')
     const mergedSites = sites.value.map((s) => {
       if (!iconOverrides.value.has(s.id)) return s
       const icon = iconOverrides.value.get(s.id)
@@ -463,7 +465,6 @@ export const useNavStore = defineStore('nav', () => {
   }
 
   async function importBackup(raw: string, mode: ImportMode) {
-    const { validateImportJson, applyImport } = await import('@/core/import-export')
     const validated = validateImportJson(raw)
     if (!validated.ok) {
       throw new Error(validated.error)
@@ -523,7 +524,6 @@ export const useNavStore = defineStore('nav', () => {
     sites,
     settings,
     iconOverrides,
-    loading,
     ready,
     usingMemoryFallback,
     initError,
@@ -534,14 +534,11 @@ export const useNavStore = defineStore('nav', () => {
     setEditMode,
     filteredSites,
     sitesByCategory,
-    visibleCategories,
     categoryTree,
     rootCategories,
     childrenOf,
-    isChildCategory,
     resolveSiteIcon,
     init,
-    hydrate,
     upsertCategory,
     removeCategory,
     upsertSite,
@@ -556,6 +553,5 @@ export const useNavStore = defineStore('nav', () => {
     clearAll,
     openSite,
     openExternalSearch,
-    findDuplicateSite,
   }
 })

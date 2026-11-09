@@ -22,11 +22,10 @@ export {
   normalizeDockOrder,
   normalizeHeaderMenus,
 } from './defaults'
-export { createFullDemoData, createSeedData } from './demo-catalog'
+export { createSeedData } from './demo-catalog'
 export {
   buildCategoryTree,
   flattenCategoryTree,
-  getChildCategoryIds,
   getDescendantIds,
   type CategoryTreeNode,
 } from './category-tree'
@@ -36,24 +35,19 @@ export {
   isValidSearchEngineTemplate,
   sanitizeHttpUrl,
   sanitizeIconUrl,
-  siteDedupeKey,
 } from './url'
 export { cleanHtmlText, parseHtmlMeta, type HtmlPageMeta } from './html-meta'
 export {
-  navExportPayloadSchema,
   parseNavExportPayload,
   safeParseNavExportPayload,
 } from './schema'
 export {
   applyImport,
   buildSearchEngineUrl,
-  createExportPayload,
   downloadExportFilename,
   exportToJson,
   faviconCandidates,
-  faviconUrl,
   filterSites,
-  resolveSiteIcon,
   sanitizeNavGraph,
   siteHostname,
   validateImportJson,

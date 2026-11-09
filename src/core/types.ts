@@ -63,7 +63,7 @@ export type AppSettings = {
   sidebarCollapsed: boolean
   /**
    * 允许第三方服务拉取页面元数据（默认关，本地优先）。
-   * 默认开；生产纯静态托管的兜底。有同域 /api/page-meta 时可关。
+   * 默认开；纯静态无 API/扩展时可作兜底。有同域 API 或扩展时可关。
    * 开启后添加网址时可能请求 Microlink / AllOrigins 等。
    */
   allowThirdPartyMeta: boolean

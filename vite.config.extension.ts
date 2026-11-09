@@ -2,10 +2,7 @@ import { build, defineConfig, type Plugin } from 'vite'
 import { copyFileSync, cpSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { createSharedVuePlugins, sharedResolveAlias } from './vite.shared.ts'
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
 const outDir = resolve(rootDir, 'extension/dist')
@@ -33,7 +30,7 @@ function copyExtensionAssets(): Plugin {
         recursive: true,
       })
 
-      // 单独打包 background，复用 html-meta 解析
+      // 单独打包 background，复用 html-meta / icon probe
       await build({
         configFile: false,
         publicDir: false,
@@ -67,23 +64,12 @@ export default defineConfig({
     'import.meta.env.VITE_APP_TARGET': JSON.stringify('extension'),
   },
   plugins: [
-    vue(),
-    AutoImport({
-      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
-      dts: 'src/types/auto-imports.d.ts',
-    }),
-    Components({
-      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
-      dts: 'src/types/components.d.ts',
-    }),
+    ...createSharedVuePlugins(),
     stripCrossOrigin(),
     copyExtensionAssets(),
   ],
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@nice-nav/core': fileURLToPath(new URL('./src/core', import.meta.url)),
-    },
+    alias: sharedResolveAlias,
   },
   build: {
     outDir,

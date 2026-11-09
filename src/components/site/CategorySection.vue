@@ -294,7 +294,30 @@ useSortable(
   );
   background: var(--nn-cat-block-bg, #ffffff70);
   border-radius: var(--nn-sidebar-radius, 16px);
+  border: var(--nn-cat-block-border, 1px solid transparent);
+  box-shadow: var(--nn-cat-block-shadow, 0 14px 40px -22px rgba(31, 41, 55, 0.28));
   padding: 12px 16px 14px;
+  /* 骨架 → 内容切换时分类块渐入，按 index 逐块错峰（延迟由 SiteGrid 注入） */
+  animation: cat-block-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--cat-enter-delay, 0ms);
+}
+
+@keyframes cat-block-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-block {
+    animation: none;
+  }
 }
 
 .cat-toolbar {
@@ -305,6 +328,7 @@ useSortable(
 }
 
 .cat-block__heading {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;

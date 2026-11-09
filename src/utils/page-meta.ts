@@ -317,8 +317,8 @@ export type FetchPageMetaOptions = {
 
 /**
  * 输入链接后自动获取标题与简介。
- * 优先：同源 /api/page-meta → 扩展 → 直连；
- * 生产环境或显式开启时再并行第三方公开接口（纯静态托管的兜底）。
+ * 优先：同源 /api/page-meta → 扩展 background → 直连；
+ * 仅当设置开启 allowThirdParty 时再并行第三方公开接口。
  */
 export async function fetchPageMeta(
   url: string,
@@ -351,8 +351,8 @@ export async function fetchPageMeta(
       3500,
     ),
   ]
-  // 生产无 Node 同域 API 时几乎只能靠第三方；开发也可在设置中开启
-  const useThirdParty = options?.allowThirdParty === true || import.meta.env.PROD
+  // 仅跟随设置；有同域 API / 扩展 background 时不必强制第三方
+  const useThirdParty = options?.allowThirdParty === true
   if (useThirdParty) {
     tasks.push(
       fetchViaMicrolink(url, signal),

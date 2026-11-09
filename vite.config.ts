@@ -1,10 +1,6 @@
-import { fileURLToPath, URL } from 'node:url'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { defineConfig, type Plugin } from 'vite'
 import { createMetaApiMiddleware } from './server/meta-api.mjs'
+import { createSharedVuePlugins, sharedResolveAlias } from './vite.shared.ts'
 
 /** 开发 / preview 同源代抓页面元数据与图标探测 */
 function pageMetaProxy(): Plugin {
@@ -19,23 +15,9 @@ function pageMetaProxy(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [
-    pageMetaProxy(),
-    vue(),
-    AutoImport({
-      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
-      dts: 'src/types/auto-imports.d.ts',
-    }),
-    Components({
-      resolvers: [ElementPlusResolver({ importStyle: 'css' })],
-      dts: 'src/types/components.d.ts',
-    }),
-  ],
+  plugins: [pageMetaProxy(), ...createSharedVuePlugins()],
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@nice-nav/core': fileURLToPath(new URL('./src/core', import.meta.url)),
-    },
+    alias: sharedResolveAlias,
   },
   server: {
     // true：同时监听 IPv4/IPv6，避免 localhost 与 127.0.0.1 表现不一致

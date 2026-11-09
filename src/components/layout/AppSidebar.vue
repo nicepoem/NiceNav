@@ -212,6 +212,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', scheduleDrawerTop)
   window.removeEventListener('resize', scheduleDrawerTop)
   if (drawerRaf) cancelAnimationFrame(drawerRaf)
+  // 清理挂到 html 上的侧栏宽度状态类
+  document.documentElement.classList.remove('nn-sidebar-wide', 'nn-sidebar-narrow')
 })
 
 watch(

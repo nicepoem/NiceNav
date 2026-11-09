@@ -74,8 +74,8 @@
   gap: 12px;
   height: var(--nn-header-height, 64px);
   padding: 0 14px;
-  border-radius: 12px;
-  background: var(--nn-section-bg, #fff);
+  /* 顶栏与真实布局一致：透明浮条，仅保留骨头 */
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -101,8 +101,7 @@
 .page-skel__search {
   width: min(880px, 100%);
   height: 54px;
-  border-radius: 12px;
-  background-color: var(--nn-section-bg, #fff);
+  border-radius: 14px;
 }
 
 .page-skel__mid {
@@ -123,7 +122,7 @@
   gap: 8px;
   padding: 10px 8px;
   border-radius: 12px;
-  background: var(--nn-section-bg, #fff);
+  background: var(--nn-sidebar-surface, #f6f7f9);
   box-sizing: border-box;
 }
 

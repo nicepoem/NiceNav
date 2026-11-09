@@ -154,8 +154,24 @@ const iconFallbackTitle = computed(() => {
     </el-icon>
 
     <div v-else class="url-card__actions" @click.stop>
-      <el-button :icon="Edit" text circle size="small" title="编辑" @click="emit('edit', site)" />
-      <el-button :icon="Delete" text circle size="small" type="danger" title="删除" @click="emit('remove', site)" />
+      <button
+        type="button"
+        class="url-card__action"
+        title="编辑"
+        aria-label="编辑"
+        @click="emit('edit', site)"
+      >
+        <el-icon :size="14"><Edit /></el-icon>
+      </button>
+      <button
+        type="button"
+        class="url-card__action url-card__action--danger"
+        title="删除"
+        aria-label="删除"
+        @click="emit('remove', site)"
+      >
+        <el-icon :size="14"><Delete /></el-icon>
+      </button>
     </div>
   </article>
   </el-tooltip>
@@ -170,14 +186,21 @@ const iconFallbackTitle = computed(() => {
   padding: 12px 14px;
   padding-right: 28px;
   background: var(--nn-card-bg);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: var(--nn-card-inset);
   border: none;
   cursor: pointer;
   /* 视口外跳过绘制，大列表更顺 */
   content-visibility: auto;
   contain-intrinsic-size: auto 64px;
-  &:hover {
+  transition:
+    box-shadow var(--nn-transition),
+    transform var(--nn-transition),
+    border-color var(--nn-transition);
+  &:hover:not(.is-sortable) {
+    box-shadow: var(--nn-card-inset-hover);
+    transform: translateY(-2px);
+
     .url-card__title {
       color: var(--nn-primary);
     }
@@ -197,17 +220,26 @@ const iconFallbackTitle = computed(() => {
   &.is-sortable {
     cursor: grab;
     padding-right: 14px;
+    transition: padding-right 0.2s ease;
 
     &:active {
       cursor: grabbing;
     }
 
-    &:hover {
-      transform: none;
+    /* 仅悬停当前卡片时展开右边距并显示编辑/删除 */
+    &:hover,
+    &:focus-within {
+      padding-right: 52px;
 
       .url-card__actions {
         opacity: 1;
+        pointer-events: auto;
       }
+    }
+
+    .url-card__actions {
+      opacity: 0;
+      pointer-events: none;
     }
   }
 }
@@ -295,13 +327,45 @@ const iconFallbackTitle = computed(() => {
 
 .url-card__actions {
   position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
+  right: 4px;
+  top: 4px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
   gap: 2px;
   opacity: 0;
   transition: opacity var(--nn-transition-fast);
+}
+
+.url-card__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    /* 比卡片底更深一档，悬停才看得见 */
+    background: color-mix(in srgb, #000 8%, var(--nn-card-bg, #f5f6f8));
+    color: var(--el-text-color-primary);
+  }
+
+  &--danger:hover,
+  &--danger:focus-visible {
+    background: color-mix(in srgb, #000 8%, var(--nn-card-bg, #f5f6f8));
+    color: var(--nn-primary, #f1404b);
+  }
 }
 
 @media (max-width: 900px) {

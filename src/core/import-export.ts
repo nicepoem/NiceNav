@@ -233,9 +233,6 @@ function mergeNavGraphs(
   return { categories, sites, addedCategories, addedSites }
 }
 
-/** UI / 导入统一：最多两级（根 → 子），更深则挂到根分类下 */
-export const MAX_CATEGORY_DEPTH = 1
-
 function clampCategoryDepth(categories: Category[]): Category[] {
   const byId = new Map(categories.map((c) => [c.id, { ...c }]))
 
@@ -416,15 +413,4 @@ export function faviconCandidates(
     `https://cravatar.com/favicon/api/index.php?url=${enc}`,
     `https://${host}/favicon.png`,
   ]
-}
-
-/** 兼容旧调用：返回首个候选 */
-export function faviconUrl(siteUrl: string, options?: FaviconCandidateOptions): string {
-  return faviconCandidates(siteUrl, options)[0] ?? ''
-}
-
-/** 优先自定义 icon，否则返回自动 favicon URL */
-export function resolveSiteIcon(site: Site, options?: FaviconCandidateOptions): string {
-  if (site.icon?.trim()) return site.icon.trim()
-  return faviconUrl(site.url, options)
 }
